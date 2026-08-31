@@ -35,12 +35,14 @@ npm run dev     # http://localhost:5180
 
 ## 安装
 
-仓库通过软链接挂到 Claude Code 的 skills 目录，在仓库里改完立即生效：
+克隆到任意位置，软链接（或直接复制）到 Claude Code 的 skills 目录：
 
 ```bash
-git clone https://github.com/Win-Hao/caseboard ~/vibe-coding/knowledge-corkboard
-ln -s ~/vibe-coding/knowledge-corkboard ~/.claude/skills/caseboard
+git clone https://github.com/Win-Hao/caseboard.git
+ln -s "$(pwd)/caseboard" ~/.claude/skills/caseboard
 ```
+
+用软链接的好处：仓库里 `git pull` 或改动后立即生效，不用重新安装。
 
 ## 目录
 
