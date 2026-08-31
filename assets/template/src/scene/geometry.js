@@ -1,18 +1,11 @@
 // 卡片几何。边缘是真轮廓，不是 alpha 抠图——正交相机下 alpha 抠图会露馅，
 // 而且投影是按轮廓算的，抠图的话影子还是方的。
-//
-// 六种边缘：
-//   clean       直角矩形。印刷品、卡纸。
-//   ripped      四边全部撕裂，振幅大。从整页上撕下来的。
-//   torn-top    只有上边撕裂。从便签本上撕下来的。
-//   deckle      细密毛边，振幅是 ripped 的三分之一。手工纸、打字纸。
-//   perforated  规则半圆齿孔，绕一圈。邮票／连续纸／票据。
-//   notched     四角切角。档案卡的分类裁角。
+// 六种边缘的枚举和说明在 edges.js（那边不依赖 three，check.mjs 也要用）。
 
 import { Shape, ShapeGeometry, PlaneGeometry, CanvasTexture } from 'three'
 import { createRng } from '../core/rng.js'
 
-export const EDGES = ['clean', 'ripped', 'torn-top', 'deckle', 'perforated', 'notched']
+export { EDGES } from './edges.js'
 
 /** 沿一条边走，每步按法线方向加一个偏移量。 */
 function walk(pts, x0, y0, x1, y1, nx, ny, steps, offsetAt) {

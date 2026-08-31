@@ -2,6 +2,37 @@
    HTML 覆盖层。3D 部分全部在 canvas 里，这里只管四个面板。
    焦点面板依赖 --rule-step 基线网格：所有 line-height 必须是它的整数倍。 */
 
+/* 字体本地化：离线可用，文字测量（textOverflows 诊断）不随网络环境漂移。
+   latin 子集即可——Courier Prime 本身没有 CJK，中文走 fallback 宋体。 */
+@font-face {
+  font-family: "Courier Prime";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/courier-prime-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Courier Prime";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/courier-prime-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Courier Prime";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/courier-prime-400-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Courier Prime";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/courier-prime-700-italic.woff2") format("woff2");
+}
+
 :root {
   --paper: #f3f0e8;
   --ink: #211d19;
