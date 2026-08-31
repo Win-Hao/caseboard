@@ -186,7 +186,9 @@ function panelFreeWidth() {
   const compact = stage.dataset.layout === 'compact'
   if (compact) return renderer.domElement.clientWidth
   const w = renderer.domElement.clientWidth
-  const panel = Math.min(Math.max(w * 0.34, 380), 620)
+  // 44% 给面板：焦点态的主角是正文，板子只需要露出被聚焦的卡和它的邻居。
+  // 上限 940 是单栏正文可读行宽的极限，再宽一行字太长。
+  const panel = Math.min(Math.max(w * 0.44, 420), 940)
   stage.style.setProperty('--focus-width', `${Math.round(panel)}px`)
   return w - panel - 84
 }
@@ -413,7 +415,7 @@ function tick() {
   requestAnimationFrame(tick)
   if (!world || !controller) return
   const cameraMoving = controller.update()
-  const hoverMoving = applyHover(world.pieces.records, hoveredId)
+  const hoverMoving = applyHover(world.pieces, hoveredId)
   if (cameraMoving || hoverMoving) invalidate(2)
   if (framesLeft <= 0) return
   framesLeft -= 1
