@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
+    "check": "node check.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

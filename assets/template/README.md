@@ -5,6 +5,7 @@
 ```bash
 npm install
 npm run dev     # http://localhost:5180
+npm run check   # 不开浏览器验证布局与结构，退出码 0 = 合格
 npm run build   # 静态站输出到 dist/
 ```
 
@@ -27,7 +28,9 @@ npm run build   # 静态站输出到 dist/
 
 ## 诊断
 
-渲染完成后：
+不开浏览器：`npm run check`（布局、结构、红线连通性、图片路径）。
+
+浏览器里能多拿到文字溢出：
 
 ```js
 window.__BOARD__.diagnostics()

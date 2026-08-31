@@ -117,11 +117,20 @@ cd <输出目录> && npm install
 
 ### 第 4 步：验证（**必须做**）
 
+**没有浏览器也能验证**——先跑这个：
+
 ```bash
-npm run dev
+npm run check     # 退出码 0 = 合格，1 = 有问题
 ```
 
-板子渲染完会把诊断写进 DOM，直接读，不用看截图：
+它检查布局（覆盖率、重叠、出界、象限）、结构（重复 id、坏 parent、节点数）、
+红线连通性、以及图片路径在不在——不达标会直接说该怎么改。
+
+只有**文字溢出**这一项 Node 里查不了（需要 canvas 的文字测量）。有浏览器就往下看；
+没有的话让用户跑 `npm run dev`，控制台会打出一行 `[board] 排版合格` 或
+`[board] 排版待改进：…`，把那行贴回来就够了。
+
+有浏览器的话，板子渲染完会把全部诊断写进 DOM，直接读，不用看截图：
 
 ```js
 document.querySelector('.kb-viewport').dataset
@@ -132,6 +141,8 @@ document.querySelector('.kb-viewport').dataset
 ```
 
 也可以 `window.__BOARD__.diagnostics()`。
+
+`npm run check` 已经覆盖下表除 `textOverflows` 外的全部项目。
 
 **合格线**：
 
