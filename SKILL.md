@@ -1,136 +1,133 @@
 ---
-name: knowledge-corkboard
-description: 把任意知识点/主题拆成层级，渲染成一块可交互的三维「侦探证据板」网页——软木板上钉着纸片、照片、便签，红线连接父子关系，点开是黄色便签纸详情面板。当用户说「讲讲 X」并想要可视化、「把 X 做成知识板/证据板/图谱」「knowledge board」「corkboard」「evidence board」「用那个软木板的样式呈现」「做个知识点可视化网页」，或需要把一篇资料、一本书、一个技术栈、一段历史整理成可探索的层级呈现时使用。产出是一个 Vite + three.js 项目，可 npm run dev 直接看。
+name: caseboard
+description: 把主题或资料拆成层级，生成一块可交互的三维「侦探证据板」网页——软木板、红线、黄色便签详情面板。产出是 Vite + three.js 项目，npm run dev 直接看。
+argument-hint: <主题，或要整理的资料>
+disable-model-invocation: true
 ---
 
-# Knowledge Corkboard
+# Caseboard
 
-把知识拆成层级，钉到一块 WebGL 软木板上。
+Break a topic into a hierarchy and pin it onto a WebGL corkboard.
 
-**产出**：一个自包含的 Vite + three.js 项目。用户 `npm run dev` 就能拖拽、缩放、点开每张纸片看详情、按 ⌘K 搜索。
+**Output**: a self-contained Vite + three.js project. The user runs `npm run dev` and can drag, zoom, click any piece of paper for details, and search with ⌘K.
 
-## 什么时候用
+## Input
 
-用户想要的是**可探索的层级知识呈现**，不是一篇文章、一份 PPT、一张静态图。典型触发：
-
-- 「讲讲光合作用，做成那种板子」
-- 「把这篇论文/这本书整理成知识板」
-- 「我想要一个 RAG 技术栈的证据板」
-- 「用软木板那种风格呈现一下 CAP 定理」
-
-如果用户只要文字解释，不要建项目——直接讲。
+This skill is only invoked explicitly via `/caseboard <topic or material>`. The argument is the topic, an article, a book, a tech stack — whatever should become the board. If no argument was given, ask what the topic is; don't guess.
 
 ---
 
-## 流程
+## Workflow
 
-### 第 1 步：拆解知识点（**最重要的一步，别跳过**）
+### Step 1: Decompose the topic (**the most important step — never skip it**)
 
-先把主题拆成**三层**，这个结构直接决定板子好不好看、好不好用。
-
-```
-L0  根            1 个     主题本身            → 中央大照片卡「Start here」
-L1  主干分支      3–7 个   主题的骨架/维度      → 档案卡，红线直连根
-L2  证据          2–5 个/L1  具体事实、定义、数字 → 纸条/便签/剪报，红线连到各自 L1
-```
-
-**拆解规则**
-
-- **L1 是"维度"不是"清单项"**。讲咖啡萃取，L1 应该是 `研磨度` / `水温` / `粉水比` / `萃取率`，不是 `第一步` / `第二步`。
-- **L1 控制在 3–7 个**。少于 3 层级感出不来，多于 7 板子会挤成一团。
-- **L2 必须是可验证的具体内容**：一个公式、一个数字、一句原文引用、一个年份、一条许可证条款。空泛的"很重要"不要放。
-- **总节点数 12–35**。低于 12 板子太空（覆盖率 < 0.3），高于 35 会重叠。项目里的诊断数据会告诉你实际覆盖率。
-- **每个节点必须有 `summary`**（一句话，出现在卡片上，≤ 60 字）**和 `detail`**（焦点面板正文，2–5 句）。卡片上放不下的都进 `detail`。
-
-**拆解示范**——题目「咖啡萃取」，思路是先找出**互相牵制的变量**，再给每个变量配可验证的证据：
+Break the topic into **three levels**. This structure directly determines whether the board looks good and works well.
 
 ```
-咖啡萃取                        ← L0：一句话说清这个主题在解决什么问题
-├─ 研磨度        blueprint      ← L1 用「变量/维度」命名，不用「第一章」
-│  ├─ 表面积     excerpt        ← L2 是机制：直径减半，总表面积翻倍
-│  ├─ 细粉       note           ← L2 是副作用
-│  └─ 通道效应   clipping       ← L2 是失效模式
+L0  root            1        the topic itself           → large central photo card, "Start here"
+L1  main branches   3–7      the topic's skeleton/axes   → dossier cards, red thread to root
+L2  evidence        2–5/L1   concrete facts, defs, data  → slips/notes/clippings, thread to their L1
+```
+
+**Decomposition rules**
+
+- **L1 entries are "dimensions", not "list items".** For coffee brewing, L1 should be `grind` / `water temp` / `ratio` / `extraction yield`, not `step 1` / `step 2`.
+- **Keep L1 between 3 and 7.** Fewer than 3 and there's no sense of hierarchy; more than 7 and the board gets crowded.
+- **Every L2 must be verifiable, concrete content**: a formula, a number, a quoted sentence, a year, a license clause. Vague "this matters a lot" doesn't belong.
+- **Total node count 12–35.** Below 12 the board looks empty (coverage < 0.3); above 35 pieces overlap. The project's diagnostics report the actual coverage.
+- **Every node needs a `summary`** (one sentence shown on the card, ≤ 30 CJK chars / ≤ 60 Latin chars) **and a `detail`** (focus-panel body, 2–5 sentences). Anything that doesn't fit on the card goes into `detail`.
+
+**Worked example** — topic "咖啡萃取" (coffee extraction). The approach: find the **mutually constraining variables** first, then give each one verifiable evidence:
+
+```
+咖啡萃取                        ← L0: one sentence on what problem this topic solves
+├─ 研磨度        blueprint      ← L1 named as a variable/dimension, not "chapter 1"
+│  ├─ 表面积     excerpt        ← L2 is a mechanism: halve the diameter, double the area
+│  ├─ 细粉       note           ← L2 is a side effect
+│  └─ 通道效应   clipping       ← L2 is a failure mode
 ├─ 水温          dossier
-│  ├─ 溶解顺序   excerpt        ← 酸先出、糖其次、苦最后
+│  ├─ 溶解顺序   excerpt        ← acids first, sugars next, bitters last
 │  └─ 跟烘焙度走 note
 ├─ 粉水比        stamp          ← facts: 1:15 – 1:17
 │  └─ TDS 浓度   note           ← facts: 1.15 – 1.45 %
 ├─ 时间与流速    dossier
 │  ├─ 闷蒸       excerpt
 │  └─ 前中后段   note
-└─ 萃取率        blueprint      ← 这一支是「判据」，把前四个变量统一起来
-   ├─ 金杯法则   quote          ← 18–22%，带 SCA 来源
-   ├─ 欠萃与过萃 clipping       ← 诊断表：尖酸=欠萃，干涩=过萃
+└─ 萃取率        blueprint      ← this branch is the "criterion" that unifies the other four
+   ├─ 金杯法则   quote          ← 18–22%, with SCA source
+   ├─ 欠萃与过萃 clipping       ← diagnosis table: sour = under, astringent = over
    └─ 折射仪     note
 ```
 
-几个可以直接抄的套路：
+Reusable moves:
 
-- **L1 找「互相牵制的变量」**，而不是按时间或章节切。讲历史就找「制度/技术/人口/外部冲击」，讲一本书就找它论证的几条主线。
-- **留一支当「判据」或「结论」**（这里是萃取率）。板子有了收束点，红线才不是发散的。
-- **L2 按角色轮换**：机制 / 数字 / 副作用 / 失效模式 / 诊断 / 工具。每支都用同一种角色会很单调。
-- **能填数字就填 `facts`**。「1 : 15 – 1 : 17」比「粉水比要合适」有用得多。
+- **Pick L1 as "mutually constraining variables"**, not time slices or chapters. For history: institutions / technology / population / external shocks. For a book: its main lines of argument.
+- **Reserve one branch as the "criterion" or "conclusion"** (here: extraction yield). With a convergence point, the red threads stop feeling scattered.
+- **Rotate L2 roles**: mechanism / number / side effect / failure mode / diagnosis / tool. Every branch using the same role reads monotonous.
+- **Fill `facts` with numbers whenever possible.** "1 : 15 – 1 : 17" beats "use a proper ratio".
 
-**先把拆解结果讲给用户看**（上面那样一个缩进列表就行），确认了再动手建项目。用户可能想调整维度划分。
+**Present the decomposition to the user for confirmation before building anything** (an indented list like the one above is enough) — they may want to adjust the dimensions. In the same confirmation, **ask which language the board should display**: Chinese, English, or follow the source material (use AskUserQuestion if available). Write all board content — `title`, `summary`, `detail`, `facts`, case labels — in the chosen language. The runtime detects the content language automatically and switches UI labels, line-breaking, and font fallback to match; no configuration needed.
 
-### 第 2 步：选卡片类型
+### Step 2: Pick a card type per node
 
-每个节点挑一个 `kind`，混着用板子才有层次。别全用同一种。
+Choose a `kind` for every node. Mix them — the board only gets texture if you don't use the same card everywhere.
 
-| kind | 长什么样 | 放什么 |
+| kind | Looks like | Use for |
 |---|---|---|
-| `dossier` | 米白档案卡，长尾夹，带表格区 | L1 主干分支（默认） |
-| `excerpt` | 撕边纸条，胶带贴住 | 论文/书里的段落摘录 |
-| `note` | 小方便签，图钉 | 一句话要点、术语定义 |
-| `quote` | 牛皮纸，撕边，胶带 | 引语、原话 |
-| `stamp` | 浅色卡，订书钉 | 许可证、规格、法条、参数表 |
-| `photo` | 宝丽来白框，图钉，红色标题条 | 有图片的节点（`image` 字段） |
-| `clipping` | 泛黄剪报，撕边 | 新闻、事件、时间点 |
-| `blueprint` | 蓝色描图纸，网格底，长尾夹 | 架构图、流程、公式 |
-| `ledger` | 淡绿账本纸，横栏线，数值右对齐 | facts 很多的节点：参数表、指标、预算 |
-| `index` | 索引卡，顶部红线 + 横格 + 打孔 | 术语定义、卡片盒式单条笔记 |
-| `telegram` | 电报纸，全大写 + STOP 断句 + 送纸孔 | 结论、警告、不容商量的要点 |
-| `chart` | **把 facts 的数值画成条形图** | 可比较的量：占比、权重、排名 |
-| `timeline` | 横轴年表，facts 的 label 当时间点 | 时间顺序、流程、演进 |
-| `memo` | 公函抬头 `MEMORANDUM` + RE 行 | 立场、规定、官方口径 |
-| `sticky` | 饱和黄便利贴 + 卷角，自带胶不用钉 | 疑问、待办、还没定论的想法 |
-| `ticket` | 存根，虚线撕口 + 竖排编号 | 单条可编号的记录：一次实验、一个事件 |
+| `dossier` | cream file card, binder clip, table area | L1 main branches (default) |
+| `excerpt` | torn slip held by tape | passages quoted from papers/books |
+| `note` | small square note, push pin | one-line points, term definitions |
+| `quote` | kraft paper, torn edges, tape | quotations, verbatim lines |
+| `stamp` | pale card, staple | licenses, specs, statutes, parameter tables |
+| `photo` | polaroid white frame, pin, red title strip | nodes with an `image` |
+| `clipping` | yellowed newspaper clipping, torn | news, events, points in time |
+| `blueprint` | blue drafting paper, grid, binder clip | architecture, flows, formulas |
+| `ledger` | pale-green ledger paper, ruled rows, right-aligned numbers | fact-heavy nodes: parameters, metrics, budgets |
+| `index` | index card, red top rule + ruled lines + punch holes | term definitions, zettelkasten-style single notes |
+| `telegram` | telegram paper, ALL CAPS + STOP breaks + feed holes | conclusions, warnings, non-negotiables |
+| `chart` | **renders `facts` values as a bar chart** | comparable quantities: shares, weights, rankings |
+| `timeline` | horizontal year axis, `facts` labels as time points | chronology, processes, evolution |
+| `memo` | letterhead `MEMORANDUM` + RE line | positions, rules, official statements |
+| `sticky` | saturated yellow sticky with curled corner, self-adhesive | open questions, TODOs, unsettled ideas |
+| `ticket` | stub with perforation + vertical serial | single numberable records: one experiment, one event |
 
-根节点固定用 `photo`（有图更好，没图会画一个程序化的标记）。
+The root node uses `photo` (an image is nice; without one a procedural plate is drawn).
 
-`chart` 和 `timeline` **必须配 `facts`**，整张版面都靠它撑——缺了会画成空卡，运行时也会警告。
-`chart` 只对能解析出数字的 value 画条（`"42 %"` `"1.5 小时"` 都行），解析不出来的按文字排，不会拿随机数凑长度。
+`chart` and `timeline` **require `facts`** — the whole layout depends on them. Missing facts produce an empty card plus a runtime warning.
+`chart` only draws bars for values it can parse as numbers (`"42 %"` and `"1.5 小时"` both work); unparseable values are laid out as text — it never fakes bar lengths with random numbers.
 
-卡片尺寸会**按层级自动缩放**（L1 ×1.16，L2 ×0.9），所以就算给二级节点挑了张大卡片，
-主干在总览下依然更显眼——层级感不依赖你挑对 `kind`。
+Card sizes **auto-scale by level** (L1 ×1.16, L2 ×0.9), so even if an L2 node gets a large card kind, the main branches still dominate at overview zoom — hierarchy doesn't depend on picking the right `kind`.
 
-### 第 3 步：建项目
+### Step 3: Create the project
 
-```bash
-cp -R ~/.claude/skills/knowledge-corkboard/assets/template <输出目录>
-cd <输出目录> && npm install
-```
-
-然后**覆写 `data/board.json`**。完整 schema 见 `references/schema.md`——写之前读一遍，字段不多但有几个约束（`id` 唯一、`parent` 必须指向已存在的 L1、`facts` 最多 4 条）。
-
-图片放 `public/`，在 JSON 里写 `/文件名.png`。没有图片就省掉 `image` 字段，不要填占位图 URL。
-
-### 第 4 步：验证（**必须做**）
-
-**没有浏览器也能验证**——先跑这个：
+Output location: use the user's choice if they named one; otherwise create `<topic-slug>-board/` in the **user's current working directory**. Never create it inside the skill repo.
 
 ```bash
-npm run check     # 退出码 0 = 合格，1 = 有问题
+rsync -a --exclude node_modules --exclude dist <skill-dir>/assets/template/ <output-dir>/
+cd <output-dir> && npm install
 ```
 
-它检查布局（覆盖率、重叠、出界、象限）、结构（重复 id、坏 parent、节点数）、
-红线连通性、以及图片路径在不在——不达标会直接说该怎么改。
+`<skill-dir>` is wherever this SKILL.md actually lives — the skill may be installed in `~/.claude/skills/`, a project-level `.claude/skills/`, or elsewhere; never hardcode it. Use rsync, not `cp -R`: the template dir may contain tens of MB of leftover `node_modules`, and BSD cp nests into `<output-dir>/template/` when the target exists.
 
-只有**文字溢出**这一项 Node 里查不了（需要 canvas 的文字测量）。有浏览器就往下看；
-没有的话让用户跑 `npm run dev`，控制台会打出一行 `[board] 排版合格` 或
-`[board] 排版待改进：…`，把那行贴回来就够了。
+Then **overwrite `data/board.json`**. The full schema is in `references/schema.md` — read it before writing. There aren't many fields, but a few constraints matter (`id` unique, `parent` must point to an existing L1, `facts` max 4 entries).
 
-有浏览器的话，板子渲染完会把全部诊断写进 DOM，直接读，不用看截图：
+Images go into `public/`; reference them as `/filename.png` in the JSON. If there are no images, omit the `image` field — never fill in placeholder URLs.
+
+### Step 4: Validate (**mandatory**)
+
+**No browser needed** — run this first:
+
+```bash
+npm run check     # exit 0 = pass, 1 = problems
+```
+
+check.mjs has zero dependencies — **it does not need npm install to have finished**. Write board.json, check immediately, iterate; let npm install run in parallel.
+
+It checks layout (coverage, overlap, out-of-bounds, quadrants), structure (duplicate ids, bad parents, node count), thread connectivity, and image paths — and tells you exactly what to fix when something fails.
+
+Only **text overflow** can't be checked in Node (it needs canvas text measurement). With a browser, read on; without one, have the user run `npm run dev` — the console prints one line, `[board] 排版合格` (pass) or `[board] 排版待改进: …` (needs work); pasting that line back is enough.
+
+With a browser, the board writes all diagnostics into the DOM after rendering — read them directly, no screenshots needed:
 
 ```js
 document.querySelector('.kb-viewport').dataset
@@ -140,68 +137,55 @@ document.querySelector('.kb-viewport').dataset
 // boardSize, layoutAttempts, threadCount, drawCalls, triangles, fontState
 ```
 
-也可以 `window.__BOARD__.diagnostics()`。
+Or call `window.__BOARD__.diagnostics()`.
 
-`npm run check` 已经覆盖下表除 `textOverflows` 外的全部项目。
+`npm run check` already covers everything in the table below except `textOverflows`.
 
-**合格线**：
+**Pass thresholds**:
 
-| 指标 | 目标 | 不达标怎么办 |
+| Metric | Target | If failing |
 |---|---|---|
-| `coverageRatio` | 0.35 – 0.62 | 太低→加 L2 节点；太高→减节点或调 `board.scale` |
-| `maxPairOverlap` | < 0.15 | 调 `layout.seed` 重排，或减节点 |
-| `occupiedQuadrants` | 4 | 节点分布不均，检查 L1 数量是不是太少 |
-| `textOverflows` | 0 | 有 `summary` 太长，缩短它（`overflowIds` 里是具体节点） |
-| `offBoardPieces` | 0 | 节点太多放不下，调大 `layout.scale` |
-| `orphanPieces` | 0 | 有卡片没连上红线，检查 `parent` 是不是指向了二级节点 |
-| `imageFailures` | 0 | `image` 路径错了，图片要放 `public/` 且路径以 `/` 开头 |
+| `coverageRatio` | 0.35 – 0.62 (check's hard floor/ceiling: 0.30 – 0.68) | too low → add L2 nodes; too high → remove nodes or raise `board.scale` |
+| `maxPairOverlap` | < 0.15 | change `layout.seed` to reshuffle, or remove nodes |
+| `occupiedQuadrants` | 4 | distribution uneven — check whether L1 count is too low |
+| `textOverflows` | 0 | a `summary` is too long — shorten it (`overflowIds` lists the nodes) |
+| `offBoardPieces` | 0 | too many nodes to fit — raise `layout.scale` |
+| `orphanPieces` | 0 | a card isn't connected — check whether its `parent` points to an L2 node |
+| `imageFailures` | 0 | bad `image` path — files go in `public/`, paths start with `/` |
 
-节点数低于 10、主干少于 3、或超过 38 时，控制台会直接打出建议，不用自己数。
+Below 10 nodes, fewer than 3 branches, or above 38 nodes, the console prints advice directly — no need to count yourself.
 
-不达标就改 JSON 重跑，别交付带红字的板子。
+If a check fails, edit the JSON and re-run. Never deliver a board with red diagnostics.
 
-`layoutAttempts` 会告诉你求解器试了哪些板子尺寸、每次的最大重叠是多少，
-末尾带 `✓` 的那个就是最终采用的。全是没打勾的说明节点太挤，该减内容或调大 `board.scale`。
+`layoutAttempts` shows which board sizes the solver tried and the max overlap of each; the one ending in `✓` is the one in use. If none has a check mark, the nodes are too crowded — cut content or raise `board.scale`.
 
-改 `layout.seed`（任意字符串）会整体重排布局——排得难看就换个种子，这是最省事的修复手段。
-不用改文件也能试：控制台里 `__BOARD__.reseed('试试这个')` 立刻重排并返回新的诊断。
+Changing `layout.seed` (any string) reshuffles the whole layout — if it looks bad, try another seed; it's the cheapest fix. You can try without editing the file: `__BOARD__.reseed('another-seed')` in the console reshuffles immediately and returns fresh diagnostics.
 
-### 第 5 步：交付
+### Step 5: Deliver
 
-告诉用户：`npm run dev` 起服务，拖拽平移、滚轮缩放、点纸片看详情、⌘K 搜索、Esc 返回。`npm run build` 出静态站。
+Tell the user: `npm run dev` starts the server — drag to pan, scroll to zoom, click a piece for details, ⌘K to search, Esc to go back. `npm run build` produces a static site.
 
 ---
 
-## 常见调整
+## Common adjustments
 
-**多个主题**：`cases` 数组放多个案卷，底部面板可以切换。适合"一本书的多个章节"「一个领域的多个子方向」。
+**Multiple topics**: put several case files in the `cases` array; the bottom panel switches between them. Good for "chapters of one book" or "subfields of one domain".
 
-**中心卡的图案**：root 没有 `image` 时会画一张程序化的「标本图版」，六种画法
-（`dial` 刻度盘 / `grid` 测绘网格 / `constellation` 星图 / `strata` 地层 / `orbit` 轨道 / `trace` 波形）。
-同一图集里各案卷自动分配不同的一种，也可以在 root 上写 `"plate": "orbit"` 指定。
-挑一种跟主题气质对得上的：讲关系用 `constellation`，讲阶段用 `strata`，讲变化用 `trace`。
+**Central card artwork**: when the root has no `image`, a procedural "specimen plate" is drawn — six styles (`dial` gauge / `grid` survey grid / `constellation` star map / `strata` strata section / `orbit` orbits / `trace` waveform). Cases in the same collection automatically get different ones; you can also pin one with `"plate": "orbit"` on the root. Pick one matching the topic's character: relationships → `constellation`, stages → `strata`, change over time → `trace`.
 
-**要不要配真实图片**：默认不配，程序化图版已经能撑住版面。
-用户明确要求、或者手上就有图时才加——把文件放进 `public/`，JSON 里写 `"image": "/文件名.png"`。
-**不要自己去网上抓图**：来源不明的图片会给用户留下版权问题，热链还会随时失效，
-而且引入网络依赖之后同一份 JSON 就不再能稳定复现同一块板。
-确实需要从网上取，先问用户，并且只用明确标注了许可的来源（维基共享资源、Openverse），
-下载到 `public/`，把出处写进那个节点的 `sources`。
+**Real images or not**: default is none — the procedural plates carry the layout fine. Add images only when the user asks or already has files: put them in `public/`, write `"image": "/filename.png"`. **Never scrape images from the web**: unknown provenance creates copyright problems for the user, hotlinks rot, and a network dependency breaks the guarantee that the same JSON reproduces the same board. If web images are truly needed, ask the user first, use only clearly licensed sources (Wikimedia Commons, Openverse), download into `public/`, and record the origin in that node's `sources`.
 
-**换配色**：每个 case 的 `accent` 改主色（红线、标题、强调色）。默认档案红 `#8c171d`。想要冷色系试 `#1f4e5f`，暗绿 `#2d4a34`。
+**Recolor**: each case's `accent` sets the primary color (threads, titles, highlights). Default is archive red `#8c171d`. For a cool scheme try `#1f4e5f`; dark green `#2d4a34`.
 
-**中英文**：运行时按内容自动判断语言，界面文案、卡片类型标签（`档案`/`FILE`）、面板小标题全部跟着切。
-写英文内容不用做任何额外配置。中日韩断行和字体回退（Courier Prime + 宋体）已配好，
-`summary` 中文 30 字内、英文 60 字符内不会溢出。
+**Chinese and English**: the runtime detects the content language and switches UI copy, card type labels (`档案`/`FILE`), and panel headings accordingly. Writing English content requires zero configuration. CJK line-breaking and font fallback (Courier Prime + Songti) are prewired; a `summary` within 30 CJK chars / 60 Latin chars will not overflow.
 
-**层级只有两层**。`parent` 指向另一个二级节点的话，运行时会把它改挂到祖父那一级并警告——
-不会静默产生一张没有红线的孤儿卡，但结构最好在写 JSON 时就理顺。
+**Two levels only.** If a `parent` points to another L2 node, the runtime re-hangs it on the grandparent and warns — you never silently get an unconnected orphan card, but fix the structure in the JSON anyway.
 
-**视频**：节点加 `video: "https://www.youtube.com/embed/XXX"`，焦点面板会渲染成一台老式显示器。
+**Video**: add `video: "https://www.youtube.com/embed/XXX"` to a node; the focus panel renders it as a vintage monitor.
 
-## 参考文档
+## Reference docs
 
-- `references/schema.md` — `board.json` 完整字段说明
-- `references/example-board.json` — 上面「咖啡萃取」示范的完整 JSON，17 节点，诊断全绿，可直接当模板改
-- `references/materials.md` — 材质/纹理/配色参数表，改视觉风格时看这个
-- `references/contributing-a-card.md` — 想加一种新卡片样式看这个（两处改动，有清单）
+- `references/schema.md` — complete `board.json` field reference
+- `references/example-board.json` — the full JSON of the coffee example above, 17 nodes, all diagnostics green; usable as a starting template
+- `references/materials.md` — materials / textures / palette parameter tables; read when changing the visual style
+- `references/contributing-a-card.md` — how to add a new card style (two touch points, with a checklist)

@@ -1,94 +1,94 @@
 # board.json Schema
 
-单一数据源。改这个文件就改了整块板子，不用碰渲染代码。
+Single source of truth. Editing this file changes the whole board; the rendering code never needs touching.
 
 ```jsonc
 {
-  "title":    "咖啡萃取",                // 必填，浏览器标题
-  "subtitle": "四个变量和一条判据",       // 可选
+  "title":    "咖啡萃取",                // required, browser title
+  "subtitle": "四个变量和一条判据",       // optional
 
   "layout": {
-    "seed":  "board-v1",   // 布局随机种子。排得难看就换个字符串重排。
-    "scale": 1.0           // 板子尺寸倍率。节点多了调到 1.15~1.4；节点少调到 0.8。
+    "seed":  "board-v1",   // layout RNG seed. Ugly layout? Change the string to reshuffle.
+    "scale": 1.0           // board size multiplier. Many nodes: 1.15–1.4; few nodes: 0.8.
   },
 
-  "cases": [ /* 见下 */ ]
+  "cases": [ /* see below */ ]
 }
 ```
 
-## case（案卷）
+## case
 
-底部面板一次显示一个 case，可以左右切换。一个主题就写一个。
+The bottom panel shows one case at a time, switchable left/right. One topic = one case.
 
 ```jsonc
 {
-  "id":     "extraction",             // 必填，唯一，用于 URL ?case=extraction
-  "label":  "咖啡萃取",                // 必填，底部面板显示的名字，≤ 12 字
-  "accent": "#8c171d",                // 可选，主色（红线/标题/强调）。默认 #8c171d
-  "root":   { /* Node，L0 */ },       // 必填
-  "nodes":  [ /* Node[]，L1 + L2 */ ] // 必填
+  "id":     "extraction",             // required, unique, used in URL ?case=extraction
+  "label":  "咖啡萃取",                // required, name shown in the bottom panel, ≤ 12 chars
+  "accent": "#8c171d",                // optional, primary color (threads/titles/highlights). Default #8c171d
+  "root":   { /* Node, L0 */ },       // required
+  "nodes":  [ /* Node[], L1 + L2 */ ] // required
 }
 ```
 
-## Node（节点）
+## Node
 
 ```jsonc
 {
-  "id":      "grind",            // 必填，case 内唯一。小写连字符。
-  "parent":  null,               // L1 写 null（挂到 root）；L2 写父 L1 的 id
-  "kind":    "dossier",          // 必填，见 SKILL.md 卡片类型表
-  "kicker":  "变量一",            // 可选，卡片顶部小标签，≤ 8 字
-  "title":   "研磨度",            // 必填，≤ 20 字（中文）/ 30 字符（英文）
-  "summary": "决定水和咖啡的接触面积。", // 必填，卡片正文，≤ 30 字 / 60 字符
-  "detail":  "完整解释……",         // 必填，焦点面板正文，2–5 句，可以长
+  "id":      "grind",            // required, unique within the case. lowercase-hyphenated.
+  "parent":  null,               // L1: null (hangs off root); L2: the id of its parent L1
+  "kind":    "dossier",          // required, see the card type table in SKILL.md
+  "kicker":  "变量一",            // optional, small label at the top of the card, ≤ 8 chars
+  "title":   "研磨度",            // required, ≤ 20 CJK chars / 30 Latin chars
+  "summary": "决定水和咖啡的接触面积。", // required, card body, ≤ 30 CJK / 60 Latin chars
+  "detail":  "完整解释……",         // required, focus-panel body, 2–5 sentences, can be long
 
-  "facts":   [                   // 可选，最多 4 条，卡片和面板都会显示
+  "facts":   [                   // optional, max 4, shown on both card and panel
     { "label": "手冲典型", "value": "中细，砂糖粗细" }
   ],
-  "bullets": [ "要点一", "要点二" ],  // 可选，最多 5 条，只在焦点面板显示
-  "sources": [                   // 可选，最多 4 条
+  "bullets": [ "要点一", "要点二" ],  // optional, max 5, focus panel only
+  "sources": [                   // optional, max 4
     { "label": "SCA Brewing Control Chart", "url": "https://sca.coffee/" }
   ],
 
-  "plate":   "orbit",            // 可选，只对 root 有效。中心卡没有配图时画哪种图版：
-                                 // dial | grid | constellation | strata | orbit | trace
-                                 // 不写就自动分配，同一图集里各案卷保证不重样。
-  "image":   "/grind.png",       // 可选。放 public/ 目录，路径以 / 开头。
-  "imageCaption": "研磨粒径对比", // 可选，配 image 用
-  "video":   "https://www.youtube.com/embed/XXXX", // 可选，必须是 embed 链接
+  "plate":   "orbit",            // optional, root only. Which plate to draw when the central
+                                 // card has no image: dial | grid | constellation | strata | orbit | trace
+                                 // Omit to auto-assign; cases in one collection never repeat.
+  "image":   "/grind.png",       // optional. Goes in public/, path starts with /.
+  "imageCaption": "研磨粒径对比", // optional, pairs with image
+  "video":   "https://www.youtube.com/embed/XXXX", // optional, must be an embed URL
   "videoCaption": "手冲萃取演示"
 }
 ```
 
-### 硬约束
+### Hard constraints
 
-| 规则 | 后果 |
+| Rule | Consequence when broken |
 |---|---|
-| `id` 在 case 内唯一 | 重复会覆盖，红线连错 |
-| `parent` 指向同 case 内已存在的、`parent: null` 的节点 | 指向 L2 会被当作 L1 处理 |
-| 层级最多 2 层（L1 + L2） | L3 不渲染 |
-| `title` / `summary` 超长 | `textOverflows` 诊断报警，卡片文字被截断 |
-| `facts` > 4 条 | 只画前 4 条 |
-| `image` 必须能加载 | 加载失败卡片留白，`imageFailures` 诊断报警 |
+| `id` unique within its case | duplicates overwrite each other, threads connect wrong |
+| `parent` points to an existing node in the same case with `parent: null` | pointing at an L2 gets treated as an L1 |
+| Max 2 levels (L1 + L2) | L3 is not rendered |
+| `title` / `summary` over length | `textOverflows` diagnostic fires, card text truncated |
+| `facts` > 4 entries | only the first 4 are drawn |
+| `image` must load | on failure the card area stays blank, `imageFailures` fires |
 
-### 边缘类型
+### Edge types
 
-边缘是**真几何轮廓**，不是 alpha 抠图——投影也按轮廓算，抠图的话影子还是方的。
+Edges are **real geometric outlines**, not alpha cutouts — shadows follow the outline too; with cutouts the shadow would still be rectangular.
 
-| edge | 长什么样 | 用在 |
+| edge | Looks like | Used for |
 |---|---|---|
-| `clean` | 直角矩形 | 印刷品、卡纸 |
-| `ripped` | 四边全部撕裂，振幅大 | 从整页上撕下来的 |
-| `torn-top` | 只有上边撕裂 | 从便签本上撕下来的 |
-| `deckle` | 细密毛边，振幅是 ripped 的三分之一 | 手工纸、打字纸 |
-| `perforated` | 规则半圆齿孔绕一圈 | 邮票、连续纸、票据 |
-| `notched` | 四角切角 | 档案卡的分类裁角 |
+| `clean` | square rectangle | printed matter, card stock |
+| `ripped` | all four edges torn, large amplitude | torn out of a full page |
+| `torn-top` | only the top edge torn | torn off a notepad |
+| `deckle` | fine fuzzy edge, one third of ripped's amplitude | handmade / typing paper |
+| `perforated` | regular semicircular punch holes all around | stamps, continuous forms, tickets |
+| `notched` | four corners cut | file-card category notches |
 
-### `kind` 与自动分配的物理属性
+### `kind` and its auto-assigned physical properties
 
-渲染器按 `kind` 决定纸张颜色、撕边与否、材质、以及钉法。不用手动指定，混着用就行。
+The renderer derives paper color, edge, material, and mounting hardware from `kind`. No manual assignment needed — just mix kinds.
 
-| kind | 纸色 | 边缘 | 五金 |
+| kind | paper | edge | hardware |
 |---|---|---|---|
 | `dossier` | `#d6c9a8` | clean | clip |
 | `excerpt` | `#ded4b9` | ripped | tape |
