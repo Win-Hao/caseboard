@@ -38,7 +38,7 @@ npm run dev     # http://localhost:5180
 仓库通过软链接挂到 Claude Code 的 skills 目录，在仓库里改完立即生效：
 
 ```bash
-git clone <this-repo> ~/vibe-coding/knowledge-corkboard
+git clone https://github.com/Win-Hao/caseboard ~/vibe-coding/knowledge-corkboard
 ln -s ~/vibe-coding/knowledge-corkboard ~/.claude/skills/caseboard
 ```
 
