@@ -4,9 +4,9 @@
 
 软木板上钉着档案卡、撕边纸条、便签、剪报，红线连接父子关系；点开任意纸片，右侧滑出黄色便签纸详情面板。产出是自包含的 Vite + three.js 项目，改一份 `data/board.json` 就能换掉全部内容。
 
-![操作演示：总览 → 点开卡片 → 方向键切换 → ⌘K 搜索 → 回到全景 → 切换案卷](docs/demo.gif)
+![操作演示：总览 → 悬停高光 → 点开卡片 → 方向键切换 → ⌘K 搜索 → 回到全景 → 切换案卷](docs/demo.gif)
 
-*上图：聚焦「研磨度」卡片 → `→` 切到下一张 → `⌘K` 搜「金杯」直达 → `0` 回全景 → 切换到第二块案卷板。*
+*上图：悬停 Grind Size 出现光晕 → 点开聚焦 → `→` 切到下一张 → `⌘K` 搜 "golden" 直达 → `0` 回全景 → 切换到第二块案卷板。界面语言随内容自动切换，中文内容即中文界面。*
 
 ## 用法
 
@@ -55,7 +55,7 @@ ln -s ~/vibe-coding/knowledge-corkboard ~/.claude/skills/caseboard
 
 ## 单独跑模板
 
-不经过 Claude 也能直接玩（demo 数据是「咖啡萃取 + 面包发酵」双案卷）：
+不经过 Claude 也能直接玩（demo 数据是 Coffee Extraction + Bread Fermentation 双案卷，英文示例）：
 
 ```bash
 cd assets/template

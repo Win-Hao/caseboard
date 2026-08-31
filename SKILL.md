@@ -37,26 +37,26 @@ L2  evidence        2–5/L1   concrete facts, defs, data  → slips/notes/clipp
 - **Total node count 12–35.** Below 12 the board looks empty (coverage < 0.3); above 35 pieces overlap. The project's diagnostics report the actual coverage.
 - **Every node needs a `summary`** (one sentence shown on the card, ≤ 30 CJK chars / ≤ 60 Latin chars) **and a `detail`** (focus-panel body, 2–5 sentences). Anything that doesn't fit on the card goes into `detail`.
 
-**Worked example** — topic "咖啡萃取" (coffee extraction). The approach: find the **mutually constraining variables** first, then give each one verifiable evidence:
+**Worked example** — topic "Coffee Extraction". The approach: find the **mutually constraining variables** first, then give each one verifiable evidence:
 
 ```
-咖啡萃取                        ← L0: one sentence on what problem this topic solves
-├─ 研磨度        blueprint      ← L1 named as a variable/dimension, not "chapter 1"
-│  ├─ 表面积     excerpt        ← L2 is a mechanism: halve the diameter, double the area
-│  ├─ 细粉       note           ← L2 is a side effect
-│  └─ 通道效应   clipping       ← L2 is a failure mode
-├─ 水温          dossier
-│  ├─ 溶解顺序   excerpt        ← acids first, sugars next, bitters last
-│  └─ 跟烘焙度走 note
-├─ 粉水比        stamp          ← facts: 1:15 – 1:17
-│  └─ TDS 浓度   note           ← facts: 1.15 – 1.45 %
-├─ 时间与流速    dossier
-│  ├─ 闷蒸       excerpt
-│  └─ 前中后段   note
-└─ 萃取率        blueprint      ← this branch is the "criterion" that unifies the other four
-   ├─ 金杯法则   quote          ← 18–22%, with SCA source
-   ├─ 欠萃与过萃 clipping       ← diagnosis table: sour = under, astringent = over
-   └─ 折射仪     note
+Coffee Extraction                     ← L0: one sentence on what problem this topic solves
+├─ Grind Size           blueprint     ← L1 named as a variable/dimension, not "chapter 1"
+│  ├─ Surface Area      excerpt       ← L2 is a mechanism: halve the size, double the area
+│  ├─ Fines             note          ← L2 is a side effect
+│  └─ Channeling        clipping      ← L2 is a failure mode
+├─ Water Temperature    dossier
+│  ├─ Dissolution Order excerpt       ← acids first, sugars next, bitters last
+│  └─ Follow the Roast  note
+├─ Brew Ratio           stamp         ← facts: 1:15 – 1:17
+│  └─ TDS               note          ← facts: 1.15 – 1.45 %
+├─ Time & Flow          dossier
+│  ├─ The Bloom         excerpt
+│  └─ Early, Mid, Late  note
+└─ Extraction Yield     blueprint     ← the "criterion" branch that unifies the other four
+   ├─ The Golden Cup    quote         ← 18–22%, with SCA source
+   ├─ Under vs. Over    clipping      ← diagnosis: sour = under, astringent = over
+   └─ Refractometer     note
 ```
 
 Reusable moves:
