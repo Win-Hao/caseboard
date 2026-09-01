@@ -12,9 +12,13 @@ export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSe
   const t = strings(locale)
   const pad2 = (n) => String(n + 1).padStart(2, '0')
 
-  /* ── 文件夹标签 ── */
+  /* ── 文件夹标签 ──
+     ≤5 个案卷一字排开；再多标签就会顶出屏幕，折叠成一个「抽屉标签」：
+     当前案卷显示为一个 tab，点开弹出可滚动的案卷索引。窄屏也走抽屉（CSS 切换）。 */
+  const many = cases.length > 5
+
   const tabs = document.createElement('nav')
-  tabs.className = 'kb-tabs'
+  tabs.className = many ? 'kb-tabs is-many' : 'kb-tabs'
   tabs.setAttribute('aria-label', t.caseWord)
   tabs.hidden = cases.length <= 1
   tabs.innerHTML = cases
@@ -28,6 +32,70 @@ export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSe
     if (btn) onSelectCase(Number(btn.dataset.index))
   })
   root.appendChild(tabs)
+
+  /* ── 抽屉标签 + 案卷索引弹层 ── */
+  const drawer = document.createElement('div')
+  drawer.className = many ? 'kb-case-drawer is-many' : 'kb-case-drawer'
+  drawer.hidden = cases.length <= 1
+  drawer.innerHTML = `
+    <button type="button" class="kb-tab is-active kb-drawer-trigger"
+            aria-haspopup="listbox" aria-expanded="false">
+      <span data-role="d-no"></span><em data-role="d-label"></em>${icons.chevronDown}
+    </button>`
+  root.appendChild(drawer)
+
+  const trigger = drawer.querySelector('.kb-drawer-trigger')
+  const dNo = drawer.querySelector('[data-role="d-no"]')
+  const dLabel = drawer.querySelector('[data-role="d-label"]')
+  let popover = null
+
+  function closePopover() {
+    if (!popover) return
+    popover.remove()
+    popover = null
+    trigger.setAttribute('aria-expanded', 'false')
+  }
+  function openPopover() {
+    if (popover) { closePopover(); return }
+    popover = document.createElement('div')
+    popover.className = 'kb-case-popover'
+    popover.setAttribute('role', 'listbox')
+    popover.innerHTML = `<div class="kb-case-list">${cases
+      .map((c, i) => `
+        <button type="button" role="option" data-index="${i}"
+                class="${i === current ? 'is-active' : ''}" aria-selected="${i === current}">
+          <span>${pad2(i)}</span><strong>${c.label}</strong>${icons.check}
+        </button>`)
+      .join('')}</div>`
+    popover.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-index]')
+      if (!btn) return
+      closePopover()
+      onSelectCase(Number(btn.dataset.index))
+    })
+    drawer.appendChild(popover)
+    trigger.setAttribute('aria-expanded', 'true')
+    popover.querySelector('button.is-active')?.focus()
+  }
+  trigger.addEventListener('click', openPopover)
+  document.addEventListener('pointerdown', (e) => {
+    if (popover && !drawer.contains(e.target)) closePopover()
+  })
+  drawer.addEventListener('keydown', (e) => {
+    if (!popover) return
+    const items = [...popover.querySelectorAll('button[data-index]')]
+    if (e.key === 'Escape') { e.preventDefault(); closePopover(); trigger.focus(); return }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    e.preventDefault()
+    const here = items.indexOf(document.activeElement)
+    const step = e.key === 'ArrowDown' ? 1 : -1
+    const next = here < 0
+      ? (step > 0 ? 0 : items.length - 1)
+      : (here + step + items.length) % items.length
+    items[next]?.focus()
+  })
+
+  let current = 0
 
   /* ── 证据吊牌 ── */
   const tag = document.createElement('section')
@@ -77,9 +145,13 @@ export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSe
   return {
     element: tag,
     setCase(index) {
+      current = index
       indexEl.textContent = `№ ${pad2(index)} / ${String(cases.length).padStart(2, '0')}`
       labelEl.textContent = cases[index].label
-      for (const btn of tabs.querySelectorAll('.kb-tab')) {
+      dNo.textContent = pad2(index)
+      dLabel.textContent = cases[index].label
+      closePopover()
+      for (const btn of tabs.querySelectorAll('.kb-tab[data-index]')) {
         const active = Number(btn.dataset.index) === index
         btn.classList.toggle('is-active', active)
         if (active) btn.setAttribute('aria-current', 'true')
