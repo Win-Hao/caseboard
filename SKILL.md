@@ -123,9 +123,9 @@ npm run check     # exit 0 = pass, 1 = problems
 
 check.mjs has zero dependencies — **it does not need npm install to have finished**. Write board.json, check immediately, iterate; let npm install run in parallel.
 
-It checks layout (coverage, overlap, out-of-bounds, quadrants), structure (duplicate ids, bad parents, node count), thread connectivity, and image paths — and tells you exactly what to fix when something fails.
+It checks layout (coverage, overlap, out-of-bounds, quadrants), structure (duplicate ids, bad parents, node count), thread connectivity, image paths, and text length (a width heuristic — CJK counts double — that fails on over-limit `kicker`/`title`/`summary`, catching nearly all overflows) — and tells you exactly what to fix when something fails.
 
-Only **text overflow** can't be checked in Node (it needs canvas text measurement). With a browser, read on; without one, have the user run `npm run dev` — the console prints one line, `[board] 排版合格` (pass) or `[board] 排版待改进: …` (needs work); pasting that line back is enough.
+The browser's canvas-measured `textOverflows` remains the ground truth for edge cases. With a browser, read on; without one, have the user run `npm run dev` — the console prints one line, `[board] 排版合格` (pass) or `[board] 排版待改进: …` (needs work); pasting that line back is enough.
 
 With a browser, the board writes all diagnostics into the DOM after rendering — read them directly, no screenshots needed:
 
@@ -139,7 +139,7 @@ document.querySelector('.kb-viewport').dataset
 
 Or call `window.__BOARD__.diagnostics()`.
 
-`npm run check` already covers everything in the table below except `textOverflows`.
+`npm run check` covers everything in the table below (`textOverflows` via the length heuristic; canvas is exact).
 
 **Pass thresholds**:
 

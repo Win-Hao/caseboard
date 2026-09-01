@@ -76,6 +76,22 @@ for (const c of model.cases) {
   const orphans = c.nodes.filter((n) => n.level > 0 && !linked.has(n.id)).map((n) => n.id)
   line('无连线卡片', orphans.length, orphans.length === 0, `${orphans.join(', ')} 的 parent 有问题`)
 
+  // 文字长度启发式：canvas 的精确测量只能在浏览器做，但按「CJK 记 2、其余记 1」
+  // 估宽已能拦住绝大多数溢出。上限对应 schema 的承诺：
+  // kicker 8 中文（估宽 16）、title 20 中文/30 英文（40）、summary 30 中文/60 英文（60）。
+  const weight = (s) => [...(s || '')].reduce(
+    (n, ch) => n + (/[⺀-鿿가-힣＀-￯]/.test(ch) ? 2 : 1), 0)
+  const CAPS = { kicker: 16, title: 40, summary: 60 }
+  const overlong = []
+  for (const n of c.nodes) {
+    for (const [field, cap] of Object.entries(CAPS)) {
+      const w = weight(n[field])
+      if (w > cap) overlong.push(`${n.id}.${field} 估宽 ${w}/${cap}`)
+    }
+  }
+  line('文字长度', overlong.length ? overlong.join('；') : '全部在限内', overlong.length === 0,
+    '超长必溢出，缩短它（中文按 2 个字符宽计）')
+
   // 图片路径：这一项浏览器里只能等加载失败才知道，Node 里可以提前查
   const missing = c.nodes
     .filter((n) => n.image)
@@ -87,7 +103,7 @@ for (const c of model.cases) {
   console.log('')
 }
 
-console.log('文字溢出这一项 Node 里查不了（需要 canvas 的文字测量）。')
+console.log('文字长度是估算；canvas 精确测量的 textOverflows 以浏览器为准。')
 console.log('跑 npm run dev，控制台会打出 [board] 排版合格 或 [board] 排版待改进。\n')
 
 if (failed) {
