@@ -1,0 +1,16 @@
+{
+  "name": "caseboard",
+  "version": "0.1.0",
+  "description": "Turn any topic into an interactive 3D detective evidence board — corkboard, red threads, legal-pad detail panel. Outputs a self-contained Vite + three.js project.",
+  "keywords": [
+    "skill",
+    "visualization",
+    "knowledge",
+    "three.js",
+    "corkboard"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Win-Hao"
+  }
+}

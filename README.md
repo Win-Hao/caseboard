@@ -35,18 +35,38 @@ npm run dev     # http://localhost:5180
 
 ## 安装
 
-**Claude Code**：克隆到任意位置，软链接（或直接复制）到 skills 目录——Claude Code 的个人 skill 没有安装命令，放进目录就算装好：
+丢给任意 coding agent：
+
+```
+Install the caseboard skill from https://github.com/Win-Hao/caseboard
+```
+
+或用 [skills CLI](https://github.com/vercel-labs/skills)（跨 agent）：
+
+```bash
+npx skills add Win-Hao/caseboard -g
+```
+
+Claude Code 以 plugin 安装（跟随仓库更新）：
+
+```
+/plugin marketplace add Win-Hao/caseboard
+/plugin install caseboard@caseboard
+```
+
+手动（复制文件，钉死当前版本）：
 
 ```bash
 git clone https://github.com/Win-Hao/caseboard.git
-ln -s "$(pwd)/caseboard" ~/.claude/skills/caseboard
+cp -R caseboard/skills/* ~/.claude/skills/   # Claude Code
+cp -R caseboard/skills/* ~/.codex/skills/    # Codex
 ```
-
-用软链接的好处：仓库里 `git pull` 或改动后立即生效，不用重新安装。
 
 **claude.ai**：从 [Releases](https://github.com/Win-Hao/caseboard/releases) 下载 `caseboard.skill`，在 Settings → Capabilities 里上传（该包已去掉 Claude Code 专有的 frontmatter 字段）。
 
 ## 目录
+
+skill 本体在 `skills/caseboard/`：
 
 | 路径 | 是什么 |
 |---|---|
@@ -62,7 +82,7 @@ ln -s "$(pwd)/caseboard" ~/.claude/skills/caseboard
 不经过 Claude 也能直接玩（demo 数据是 Coffee Extraction + Bread Fermentation 双案卷，英文示例）：
 
 ```bash
-cd assets/template
+cd skills/caseboard/assets/template
 npm install
 npm run dev     # http://localhost:5180
 npm run check   # 不开浏览器验证布局与结构，退出码 0 = 合格

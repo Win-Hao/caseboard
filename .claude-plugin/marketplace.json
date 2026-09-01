@@ -1,0 +1,14 @@
+{
+  "name": "caseboard",
+  "owner": {
+    "name": "Win-Hao"
+  },
+  "plugins": [
+    {
+      "name": "caseboard",
+      "source": "./",
+      "description": "Turn any topic into an interactive 3D detective evidence board — corkboard, red threads, legal-pad detail panel."
+    }
+  ],
+  "description": "caseboard: break a topic into a hierarchy and pin it onto an interactive WebGL corkboard (Vite + three.js, zero image assets, deterministic layout)."
+}
