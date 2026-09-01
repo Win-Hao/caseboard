@@ -30,11 +30,12 @@ function normalizeNode(raw, { level, caseId, index, locale }) {
     title: String(raw.title ?? '未命名'),
     summary: String(raw.summary ?? ''),
     detail: String(raw.detail ?? raw.summary ?? ''),
-    facts: clampArray(raw.facts, 4).map((f) => ({
+    // 上限管的是焦点面板；卡片自己按版面空间画得下多少画多少（截断会上报）
+    facts: clampArray(raw.facts, 12).map((f) => ({
       label: String(f.label ?? ''), value: String(f.value ?? ''),
     })),
-    bullets: clampArray(raw.bullets, 5).map(String),
-    sources: clampArray(raw.sources, 4).map((s) => ({
+    bullets: clampArray(raw.bullets, 12).map(String),
+    sources: clampArray(raw.sources, 8).map((s) => ({
       label: String(s.label ?? s.url ?? ''), url: String(s.url ?? ''),
     })),
     image: raw.image ? String(raw.image) : null,

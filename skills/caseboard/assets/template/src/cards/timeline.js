@@ -21,7 +21,8 @@ export default {
     ctx.font = font(600, 50 * s)
     track(drawWrapped(ctx, node.title, pad, pad + 84 * s, w - pad * 2, 56 * s, 1))
 
-    const rows = node.facts
+    // 横轴挤 6 个刻度以内才可读；更多的留给焦点面板
+    const rows = node.facts.slice(0, 6)
     const axisY = h * 0.62
     const left = pad
     const right = w - pad

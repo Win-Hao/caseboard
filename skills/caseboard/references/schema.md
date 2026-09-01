@@ -42,11 +42,12 @@ The bottom panel shows one case at a time, switchable left/right. One topic = on
   "summary": "决定水和咖啡的接触面积。", // required, card body, ≤ 30 CJK / 60 Latin chars
   "detail":  "完整解释……",         // required, focus-panel body, 2–5 sentences, can be long
 
-  "facts":   [                   // optional, max 4, shown on both card and panel
+  "facts":   [                   // optional, max 12. The panel shows all of them;
     { "label": "手冲典型", "value": "中细，砂糖粗细" }
-  ],
-  "bullets": [ "要点一", "要点二" ],  // optional, max 5, focus panel only
-  "sources": [                   // optional, max 4
+  ],                             // cards draw as many as fit (~4) and report truncation;
+                                 // chart/timeline plot the first 6
+  "bullets": [ "要点一", "要点二" ],  // optional, max 12, focus panel only
+  "sources": [                   // optional, max 8
     { "label": "SCA Brewing Control Chart", "url": "https://sca.coffee/" }
   ],
 
@@ -68,7 +69,7 @@ The bottom panel shows one case at a time, switchable left/right. One topic = on
 | `parent` points to an existing node in the same case with `parent: null` | pointing at an L2 gets treated as an L1 |
 | Max 2 levels (L1 + L2) | L3 is not rendered |
 | `title` / `summary` over length | `textOverflows` diagnostic fires, card text truncated |
-| `facts` > 4 entries | only the first 4 are drawn |
+| `facts` > 12 entries | truncated to 12; cards draw what fits, chart/timeline plot the first 6 |
 | `image` must load | on failure the card area stays blank, `imageFailures` fires |
 
 ### Edge types

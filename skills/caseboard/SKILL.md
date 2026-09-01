@@ -131,7 +131,7 @@ cd <output-dir> && npm install
 
 `<skill-dir>` is wherever this SKILL.md actually lives — the skill may be installed in `~/.claude/skills/`, a project-level `.claude/skills/`, or elsewhere; never hardcode it. Use rsync, not `cp -R`: the template dir may contain tens of MB of leftover `node_modules`, and BSD cp nests into `<output-dir>/template/` when the target exists.
 
-Then **overwrite `data/board.json`**. The full schema is in `references/schema.md` — read it before writing. There aren't many fields, but a few constraints matter (`id` unique, `parent` must point to an existing L1, `facts` max 4 entries).
+Then **overwrite `data/board.json`**. The full schema is in `references/schema.md` — read it before writing. There aren't many fields, but a few constraints matter (`id` unique, `parent` must point to an existing L1, `facts` max 12 — the card face draws the first ~4, the focus panel shows them all, so put the headline numbers first).
 
 Images go into `public/`; reference them as `/filename.png` in the JSON. If there are no images, omit the `image` field — never fill in placeholder URLs.
 

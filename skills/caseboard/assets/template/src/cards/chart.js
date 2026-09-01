@@ -35,7 +35,8 @@ export default {
     const sum = drawWrapped(ctx, node.summary, pad, t.bottom + 34 * s, w - pad * 2, 34 * s, 1)
     track(sum)
 
-    const rows = node.facts
+    // 版面高度画 6 条以内才可读；更多的留给焦点面板
+    const rows = node.facts.slice(0, 6)
     if (rows.length === 0) return
 
     const top = sum.bottom + 26 * s
