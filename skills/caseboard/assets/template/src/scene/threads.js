@@ -15,11 +15,15 @@ const RADIAL = 6            // 截面边数
 const SHADE_OFFSET = { x: 0.05, y: -0.06 }
 
 // 手感参数。FORCE 大了像鞭子，小了像铁丝；DAMPING 决定甩完多久停。
-const FORCE = 5.2           // 相机加速度 → 惯性力的放大
-const DAMPING = 0.916       // 每帧速度保留比例
-const REST_PULL = 0.028     // 回位弹簧强度
-const CONSTRAINT_ITERS = 2  // 段长约束迭代次数
-const SLEEP_EPS = 0.0004    // 所有质点位移小于这个就休眠
+// 激励要先过低通再限幅：相机缓动的第一帧速度是突变的，
+// 不滤波每次起手都是一记鞭子抽——就是那种「诡异的抽动」。
+const FORCE = 3.0           // 相机加速度 → 惯性力的放大
+const FORCE_SMOOTH = 0.18   // 激励低通系数（越小越绵）
+const FORCE_MAX = 0.045     // 单步力上限（世界单位）
+const DAMPING = 0.94        // 每步速度保留比例（60Hz 步长下约 1s 晃停）
+const REST_PULL = 0.026     // 回位弹簧强度
+const CONSTRAINT_ITERS = 3  // 段长约束迭代次数
+const SLEEP_EPS = 0.0004    // 速度低于这个（且偏移够小）就休眠
 
 /** 两点之间一条会下垂的线。 */
 function threadCurve(a, b, sag, lift) {
@@ -80,15 +84,20 @@ export function buildThreads(caseModel, layout, accent, anchors) {
     const ry = new Float32Array(count)
     const z = new Float32Array(count)
     const seg = new Float32Array(count - 1)
+    // 力权重：正弦包络 × 每根线独立增益。中段荡得多、钉子附近几乎不动，
+    // 各线响应不同步——同步平移是另一半「诡异」的来源。
+    const gain = rng.range(0.72, 1.15)
+    const w = new Float32Array(count)
     for (let i = 0; i < count; i += 1) {
       x[i] = px[i] = rx[i] = pts[i].x
       y[i] = py[i] = ry[i] = pts[i].y
       z[i] = pts[i].z
+      w[i] = Math.sin((i / (count - 1)) * Math.PI) * gain
     }
     for (let i = 0; i < count - 1; i += 1) {
       seg[i] = Math.hypot(x[i + 1] - x[i], y[i + 1] - y[i])
     }
-    return { count, x, y, px, py, rx, ry, z, seg }
+    return { count, x, y, px, py, rx, ry, z, seg, w }
   })
 
   /* ── 几何：固定拓扑，每帧只重写 position/normal ── */
@@ -183,27 +192,46 @@ export function buildThreads(caseModel, layout, accent, anchors) {
   main.geo.computeBoundingSphere()
   shade.geo.computeBoundingSphere()
 
-  /* ── 模拟 ── */
+  /* ── 模拟 ──
+     固定 60Hz 步进：高刷屏上按帧跑会让阻尼平方衰减（120Hz 下晃 0.2s 就死），
+     手感随显示器变。相机位移攒进 pending，凑够一步的时间才推进一步。 */
+  const STEP = 1000 / 60
   let awake = false
   let prevAx = 0
   let prevAy = 0
+  let fSx = 0
+  let fSy = 0
+  let acc = 0
+  let lastT = 0
+  let pendX = 0
+  let pendY = 0
 
-  function simulate(camDx, camDy) {
+  function stepPhysics(camDx, camDy) {
     // 惯性力 = 相机加速度取反。速度恒定时几乎不出力，起手和急停时甩得最狠。
-    const fx = -(camDx - prevAx) * FORCE
-    const fy = -(camDy - prevAy) * FORCE
+    const rawX = -(camDx - prevAx) * FORCE
+    const rawY = -(camDy - prevAy) * FORCE
     prevAx = camDx
     prevAy = camDy
+    fSx += (rawX - fSx) * FORCE_SMOOTH
+    fSy += (rawY - fSy) * FORCE_SMOOTH
+    let fx = fSx
+    let fy = fSy
+    const mag = Math.hypot(fx, fy)
+    if (mag > FORCE_MAX) {
+      fx = (fx / mag) * FORCE_MAX
+      fy = (fy / mag) * FORCE_MAX
+    }
     const kicked = Math.abs(fx) > 1e-5 || Math.abs(fy) > 1e-5
-    if (!awake && !kicked) return false
+    if (!awake && !kicked) return
     awake = true
 
-    let maxMove = 0
+    let maxVel = 0
+    let maxOff = 0
     for (const c of chains) {
       const last = c.count - 1
       for (let i = 1; i < last; i += 1) {
-        const vx = (c.x[i] - c.px[i]) * DAMPING + fx + (c.rx[i] - c.x[i]) * REST_PULL
-        const vy = (c.y[i] - c.py[i]) * DAMPING + fy + (c.ry[i] - c.y[i]) * REST_PULL
+        const vx = (c.x[i] - c.px[i]) * DAMPING + fx * c.w[i] + (c.rx[i] - c.x[i]) * REST_PULL
+        const vy = (c.y[i] - c.py[i]) * DAMPING + fy * c.w[i] + (c.ry[i] - c.y[i]) * REST_PULL
         c.px[i] = c.x[i]
         c.py[i] = c.y[i]
         c.x[i] += vx
@@ -229,26 +257,46 @@ export function buildThreads(caseModel, layout, accent, anchors) {
         }
       }
       for (let i = 1; i < last; i += 1) {
-        const m = Math.abs(c.x[i] - c.px[i]) + Math.abs(c.y[i] - c.py[i]) + Math.abs(c.x[i] - c.rx[i]) * 0.05
-        if (m > maxMove) maxMove = m
+        const v = Math.abs(c.x[i] - c.px[i]) + Math.abs(c.y[i] - c.py[i])
+        const o = Math.abs(c.x[i] - c.rx[i]) + Math.abs(c.y[i] - c.ry[i])
+        if (v > maxVel) maxVel = v
+        if (o > maxOff) maxOff = o
       }
     }
 
-    if (maxMove < SLEEP_EPS && !kicked) {
-      // 收敛后钉回原形休眠，保证静止形状严格确定
+    // 休眠：速度和残余偏移都小才钉回原形。偏移阈值约半个线径，肉眼看不出跳。
+    if (!kicked && maxVel < SLEEP_EPS && maxOff < 0.012) {
       for (const c of chains) {
         for (let i = 1; i < c.count - 1; i += 1) {
           c.x[i] = c.px[i] = c.rx[i]
           c.y[i] = c.py[i] = c.ry[i]
         }
       }
-      writeAll()
       awake = false
-      return true
+      fSx = 0
+      fSy = 0
     }
+  }
 
-    writeAll()
-    return true
+  function simulate(camDx, camDy) {
+    const now = performance.now()
+    const dt = lastT ? Math.min(now - lastT, 100) : STEP
+    lastT = now
+    pendX += camDx
+    pendY += camDy
+    acc += dt
+    let steps = Math.floor(acc / STEP)
+    if (steps <= 0) return awake
+    if (steps > 3) steps = 3
+    acc -= steps * STEP
+    const wasAwake = awake
+    const sx = pendX / steps
+    const sy = pendY / steps
+    pendX = 0
+    pendY = 0
+    for (let s = 0; s < steps; s += 1) stepPhysics(sx, sy)
+    if (awake || wasAwake) writeAll()
+    return awake || wasAwake
   }
 
   return {
