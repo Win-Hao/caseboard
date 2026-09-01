@@ -22,7 +22,7 @@
   <sub>hover glow → focus a card → arrow through → ⌘K search → back to overview → second case file</sub>
 </p>
 
-An agent skill that breaks a topic — a paper, a book, a tech stack, a slice of history — into a three-level hierarchy and pins it onto an interactive WebGL corkboard: dossiers, torn slips, polaroids and sticky notes, red threads for parent-child links, a yellow legal-pad panel for details.
+An agent skill that breaks a topic — a paper, a book, a tech stack, a slice of history — into a hierarchy and pins it onto an interactive WebGL corkboard: dossiers, torn slips, polaroids and sticky notes, red threads for parent-child links, a yellow legal-pad panel for details.
 
 The output is a self-contained **Vite + three.js** project. One JSON file (`data/board.json`) holds all content; everything else — cork, wood grain, paper fiber, all 16 card faces — is drawn procedurally in Canvas 2D. Same JSON + same seed reproduces the same board, bit for bit.
 
@@ -115,6 +115,8 @@ npm run build   # static site in dist/
 - **Deterministic.** Layout, aging spots, pin colors all derive from seeds. Don't like the arrangement? Change `layout.seed` — one string, whole board reshuffles.
 - **Verifiable without eyes.** The renderer writes coverage, overlap, out-of-bounds, orphan and text-overflow diagnostics into the DOM; `npm run check` covers the same gates in Node with zero dependencies — an agent can iterate to green without ever seeing a pixel.
 - **Edges are real geometry.** Torn, deckled and perforated outlines are `ShapeGeometry`, not alpha cutouts — shadows follow the contour.
+- **Soft threads.** Every red thread is a verlet rope pinned at both ends — drag the board and they swing with real inertia, then settle back to the exact authored sag.
+- **Scales with content.** Past 30 nodes the cards shrink automatically, so one board holds up to 60 notes; evidence can nest deeper than two levels where the material genuinely chains, each level drawn smaller.
 - **Bilingual runtime.** UI language, line-breaking and font fallback follow the content automatically; Chinese content gets a Chinese interface with zero configuration.
 
 ## Repo layout
