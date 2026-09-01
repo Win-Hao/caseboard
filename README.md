@@ -41,7 +41,7 @@ In any other coding agent:
 Read the caseboard SKILL.md in this repo and build me a board about coffee extraction
 ```
 
-The agent proposes the hierarchy, asks which language the board should display, then scaffolds the project, installs dependencies, iterates `npm run check` until every diagnostic is green, starts the dev server, and hands you a URL. You type nothing.
+The agent proposes the hierarchy, writes the board in whatever language you typed your request in, then scaffolds the project, installs dependencies, iterates `npm run check` until every diagnostic is green, starts the dev server, and hands you a URL. You type nothing.
 
 | Control | Action |
 |---|---|

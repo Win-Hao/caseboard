@@ -1,7 +1,7 @@
 ---
 name: caseboard
-description: 把主题或资料拆成层级，生成一块可交互的三维「侦探证据板」网页——软木板、红线、黄色便签详情面板。产出是 Vite + three.js 项目，npm run dev 直接看。
-argument-hint: <主题，或要整理的资料>
+description: Break a topic or source material into a hierarchy and render it as an interactive 3D detective evidence board — corkboard, red threads, legal-pad detail panel. Output is a self-contained Vite + three.js project; npm run dev to view.
+argument-hint: <topic, or material to organize>
 disable-model-invocation: true
 ---
 
@@ -73,7 +73,9 @@ Reusable moves:
 - **Rotate L2 roles**: mechanism / number / side effect / failure mode / diagnosis / tool. Every branch using the same role reads monotonous.
 - **Fill `facts` with numbers whenever possible.** "1 : 15 – 1 : 17" beats "use a proper ratio".
 
-**Present the decomposition to the user for confirmation before building anything** (an indented list like the one above is enough) — they may want to adjust the dimensions. In the same confirmation, **ask which language the board should display**: Chinese, English, or follow the source material (use AskUserQuestion if available). Write all board content — `title`, `summary`, `detail`, `facts`, case labels — in the chosen language. The runtime detects the content language automatically and switches UI labels, line-breaking, and font fallback to match; no configuration needed.
+**Present the decomposition to the user for confirmation before building anything** (an indented list like the one above is enough) — they may want to adjust the dimensions.
+
+**Board language: follow the user, don't ask.** Write all board content — `title`, `summary`, `detail`, `facts`, case labels — in the language the user typed their request in (a Chinese prompt gets a Chinese board, even about an English-named subject). Source material in another language doesn't override this — the user's own words do. Only deviate if they explicitly name a language. The runtime detects the content language automatically and switches UI labels, line-breaking, and font fallback to match; no configuration needed.
 
 ### Step 2: Pick a card type per node
 
