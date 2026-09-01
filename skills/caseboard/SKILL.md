@@ -73,7 +73,20 @@ Reusable moves:
 - **Rotate L2 roles**: mechanism / number / side effect / failure mode / diagnosis / tool. Every branch using the same role reads monotonous.
 - **Fill `facts` with numbers whenever possible.** "1 : 15 – 1 : 17" beats "use a proper ratio".
 
-**Present the decomposition to the user for confirmation before building anything** (an indented list like the one above is enough) — they may want to adjust the dimensions.
+**Ground the content — don't recite training data.**
+
+- If the user supplied material (a paper, notes, a URL), that material is the single source of truth: every L2 must trace back to it. Don't pad it with remembered facts.
+- Decomposing from your own knowledge: verify the load-bearing specifics — numbers, dates, quotes, version numbers, standards — with web search when a search tool is available, and record the real origin in that node's `sources`. Fast-moving domains (software, prices, papers, current events) always deserve a search pass; the person asking for a board usually doesn't know the topic well enough to catch your errors.
+- No search tool available? Keep to stable, well-established facts, drop any specific you can't stand behind rather than inventing it, and tell the user which parts went unverified.
+
+**Present the decomposition for confirmation — in this fixed form.** Show the indented tree, then ask exactly one closed question (via AskUserQuestion if available). Never ask "which node would you like to change?" — someone meeting unfamiliar material has no way to answer that. Ask:
+
+1. **Build it** — the decomposition looks right
+2. **Deeper** — more evidence under each branch
+3. **Broader** — add missing dimensions/branches
+4. **Simpler** — fewer nodes, plainer wording
+
+If the user names concrete changes in free text instead, treat those as authoritative and re-confirm only if the structure changed substantially.
 
 **Board language: follow the user, don't ask.** Write all board content — `title`, `summary`, `detail`, `facts`, case labels — in the language the user typed their request in (a Chinese prompt gets a Chinese board, even about an English-named subject). Source material in another language doesn't override this — the user's own words do. Only deviate if they explicitly name a language. The runtime detects the content language automatically and switches UI labels, line-breaking, and font fallback to match; no configuration needed.
 
