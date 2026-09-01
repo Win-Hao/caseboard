@@ -125,7 +125,7 @@ check.mjs has zero dependencies — **it does not need npm install to have finis
 
 It checks layout (coverage, overlap, out-of-bounds, quadrants), structure (duplicate ids, bad parents, node count), thread connectivity, image paths, and text length (a width heuristic — CJK counts double — that fails on over-limit `kicker`/`title`/`summary`, catching nearly all overflows) — and tells you exactly what to fix when something fails.
 
-The browser's canvas-measured `textOverflows` remains the ground truth for edge cases. With a browser, read on; without one, have the user run `npm run dev` — the console prints one line, `[board] 排版合格` (pass) or `[board] 排版待改进: …` (needs work); pasting that line back is enough.
+The browser's canvas-measured `textOverflows` remains the ground truth for edge cases. With a browser tool, read on; without one, start the dev server yourself and ask the user to open the URL — the devtools console prints one line, `[board] 排版合格` (pass) or `[board] 排版待改进: …` (needs work); them pasting that line back is enough.
 
 With a browser, the board writes all diagnostics into the DOM after rendering — read them directly, no screenshots needed:
 
@@ -163,7 +163,9 @@ Changing `layout.seed` (any string) reshuffles the whole layout — if it looks 
 
 ### Step 5: Deliver
 
-Tell the user: `npm run dev` starts the server — drag to pan, scroll to zoom, click a piece for details, ⌘K to search, Esc to go back. `npm run build` produces a static site.
+Do the launching yourself — don't hand the user a list of commands to type. Start the dev server in the background (`npm run dev`, port 5180; Vite auto-bumps the port if taken — read the actual URL from its output) and give the user the URL plus the controls in one line: drag to pan, scroll to zoom, click a piece for details, ⌘K to search, Esc back, 0 to fit.
+
+Mention that `npm run build` produces a static site they can host anywhere — but only run it if they ask.
 
 ---
 

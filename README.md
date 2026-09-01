@@ -17,13 +17,9 @@
 /caseboard 把这篇论文整理成证据板：<粘贴内容>
 ```
 
-Claude 会先给出层级拆解方案，确认后生成项目：
-
-```bash
-cd <输出目录>
-npm install
-npm run dev     # http://localhost:5180
-```
+Claude 会先给出层级拆解方案并问你板子用什么语言，确认后自动建项目、装依赖、
+跑 `npm run check` 迭代到全绿，最后把 dev server 起好、直接给你一个可以打开的 URL——
+全程不需要你敲命令。
 
 | 操作 | 说明 |
 |---|---|
