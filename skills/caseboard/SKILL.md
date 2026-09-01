@@ -34,8 +34,15 @@ L2  evidence        2–5/L1   concrete facts, defs, data  → slips/notes/clipp
 - **L1 entries are "dimensions", not "list items".** For coffee brewing, L1 should be `grind` / `water temp` / `ratio` / `extraction yield`, not `step 1` / `step 2`.
 - **Keep L1 between 3 and 7.** Fewer than 3 and there's no sense of hierarchy; more than 7 and the board gets crowded.
 - **Every L2 must be verifiable, concrete content**: a formula, a number, a quoted sentence, a year, a license clause. Vague "this matters a lot" doesn't belong.
-- **Total node count 12–35.** Below 12 the board looks empty (coverage < 0.3); above 35 pieces overlap. The project's diagnostics report the actual coverage.
+- **Total node count 12–35 per case.** Below 12 the board looks empty (coverage < 0.3); above 35 pieces overlap, and above 38 `npm run check` fails outright. The project's diagnostics report the actual coverage.
 - **Every node needs a `summary`** (one sentence shown on the card, ≤ 30 CJK chars / ≤ 60 Latin chars) **and a `detail`** (focus-panel body, 2–5 sentences). Anything that doesn't fit on the card goes into `detail`.
+
+**When the material doesn't fit one board**: estimate scope before decomposing. If a faithful decomposition would exceed ~35 nodes, don't cram or amputate — split into **multiple cases** (the `cases` array; each case is its own board with its own layout and accent, and the UI collapses many cases into a drawer automatically). Split along the material's natural top level: a book by parts/chapters, a tech stack by subsystem, history by era, a big domain by subfield. Then decompose each case independently with the same 3–7 branch rules, 12–35 nodes each. Two things to keep in mind:
+
+- Threads never cross cases. If a concept matters in several cases, give each case its own node for it — a card repeated is better than a connection lost.
+- Don't pad the other way: a topic that fits comfortably in one board should stay one board. Multi-case is for overflow, not decoration.
+
+Include the case list (one line each) plus every per-case tree in the confirmation you show the user.
 
 **Worked example** — topic "Coffee Extraction". The approach: find the **mutually constraining variables** first, then give each one verifiable evidence:
 
@@ -171,7 +178,7 @@ Mention that `npm run build` produces a static site they can host anywhere — b
 
 ## Common adjustments
 
-**Multiple topics**: put several case files in the `cases` array; the bottom panel switches between them. Good for "chapters of one book" or "subfields of one domain".
+**Multiple topics**: put several case files in the `cases` array; folder tabs at the bottom switch between them (many cases collapse into a drawer). Good for "chapters of one book" or "subfields of one domain" — see the sizing rule in Step 1 for when to split.
 
 **Central card artwork**: when the root has no `image`, a procedural "specimen plate" is drawn — six styles (`dial` gauge / `grid` survey grid / `constellation` star map / `strata` strata section / `orbit` orbits / `trace` waveform). Cases in the same collection automatically get different ones; you can also pin one with `"plate": "orbit"` on the root. Pick one matching the topic's character: relationships → `constellation`, stages → `strata`, change over time → `trace`.
 
