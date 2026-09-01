@@ -89,11 +89,10 @@ cp -R caseboard/skills/* ~/.codex/skills/    # Codex
 ```bash
 claude plugin update caseboard@caseboard   # plugin 安装（或 /plugin marketplace update caseboard）
 npx skills add Win-Hao/caseboard -g        # skills CLI：重跑 add 即刷新
-git pull                                   # clone + 软链接：拉一下就完事
 ```
 
-手动复制的：拉取仓库后重跑那条 `cp -R`。claude.ai：从 Releases 下载最新
-`caseboard.skill` 重新上传即可覆盖旧版。
+手动复制的：拉取（或重新 clone）仓库后重跑那条 `cp -R`。claude.ai：从 Releases
+下载最新 `caseboard.skill` 重新上传即可覆盖旧版。
 
 marketplace 清单没有钉版本号，plugin 更新直接跟随本仓库最新提交。
 

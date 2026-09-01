@@ -89,11 +89,11 @@ Match your install method:
 ```bash
 claude plugin update caseboard@caseboard   # plugin (or: /plugin marketplace update caseboard)
 npx skills add Win-Hao/caseboard -g        # skills CLI: re-running add refreshes it
-git pull                                   # clone + symlink: that's the whole update
 ```
 
-Manual copies: pull the repo and re-run the `cp -R`. On claude.ai, download the
-latest `caseboard.skill` from Releases and upload it again to replace the old one.
+Manual copies: pull (or re-clone) the repo and re-run the `cp -R`. On claude.ai,
+download the latest `caseboard.skill` from Releases and upload it again to
+replace the old one.
 
 The marketplace entry pins no version, so plugin updates track this repo's latest commit.
 
