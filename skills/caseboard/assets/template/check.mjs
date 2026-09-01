@@ -73,7 +73,7 @@ for (const c of model.cases) {
 
   // 红线连通性：每张非 root 卡都该挂在树上
   const linked = new Set()
-  for (const b of c.branches) { linked.add(b.id); for (const l of b.children) linked.add(l.id) }
+  ;(function walk(n) { for (const ch of n.children) { linked.add(ch.id); walk(ch) } })(c.root)
   const orphans = c.nodes.filter((n) => n.level > 0 && !linked.has(n.id)).map((n) => n.id)
   line('无连线卡片', orphans.length, orphans.length === 0, `${orphans.join(', ')} 的 parent 有问题`)
 

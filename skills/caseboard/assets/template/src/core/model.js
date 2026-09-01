@@ -1,6 +1,6 @@
 // board.json → 归一化的场景模型。所有校验在这里做一次，下游不再防御。
 
-import { kindSpec, DEFAULT_KIND, KINDS, ROOT_SIZE, LEVEL_SCALE, detectLocale } from './spec.js'
+import { kindSpec, DEFAULT_KIND, KINDS, ROOT_SIZE, levelScale, detectLocale } from './spec.js'
 import { PLATE_NAMES } from '../cards/plates.js'
 import { hashSeed } from './rng.js'
 
@@ -45,7 +45,7 @@ function normalizeNode(raw, { level, caseId, index, locale }) {
     videoCaption: raw.videoCaption ? String(raw.videoCaption) : '',
     size: level === 0
       ? ROOT_SIZE.slice()
-      : spec.size.map((v) => +(v * LEVEL_SCALE[level]).toFixed(3)),
+      : spec.size.map((v) => +(v * levelScale(level)).toFixed(3)),
     children: [],
   }
 }
@@ -90,32 +90,34 @@ export function buildModel(data) {
       branches.push(node)
     }
 
-    // 第二轮：level 2（parent 指向已存在的 level 1）
+    // 第二轮起：逐层挂靠——parent 已就位的节点挂上去，层级 = 父层 + 1。
+    // 层数不设硬限，由内容决定（SKILL 里给的是「默认两层证据、确需再深」的指引）。
     const leaves = []
-    for (const [i, n] of rawNodes.entries()) {
-      if (!n.parent) continue
-      let parent = byId.get(String(n.parent))
-      // 只支持两层。parent 指向另一个 L2 的话，静默接受会造出一张
-      // 既没有红线、也不在导航序列里的孤儿卡——改挂到祖父那一级。
-      if (parent && parent.level === 2) {
-        const grand = byId.get(String(parent.parent))
-        warn.push(`节点 "${n.id}" 的 parent "${n.parent}" 本身是二级节点；只支持两层，已改挂到 "${grand ? grand.id : '主干'}"`)
-        parent = grand
+    let queue = [...rawNodes.entries()].filter(([, n]) => n.parent)
+    let progressed = true
+    while (queue.length && progressed) {
+      progressed = false
+      const next = []
+      for (const [i, n] of queue) {
+        const parent = byId.get(String(n.parent))
+        if (!parent) { next.push([i, n]); continue }
+        progressed = true
+        const node = normalizeNode(n, { level: parent.level + 1, caseId, index: i, locale })
+        if (seen.has(node.id)) { warn.push(`重复 id "${node.id}"，已跳过`); continue }
+        seen.add(node.id)
+        node.parent = parent.id
+        parent.children.push(node)
+        byId.set(node.id, node)
+        leaves.push(node)
       }
-      if (!parent) {
-        warn.push(`节点 "${n.id}" 的 parent "${n.parent}" 不存在，已提升为主干分支`)
-        const node = normalizeNode({ ...n, parent: null }, { level: 1, caseId, index: i, locale })
-        if (seen.has(node.id)) continue
-        seen.add(node.id); byId.set(node.id, node); branches.push(node)
-        continue
-      }
-      const node = normalizeNode(n, { level: 2, caseId, index: i, locale })
-      if (seen.has(node.id)) { warn.push(`重复 id "${node.id}"，已跳过`); continue }
-      seen.add(node.id)
-      node.parent = parent.id
-      parent.children.push(node)
-      byId.set(node.id, node)
-      leaves.push(node)
+      queue = next
+    }
+    // 收不进树的（parent 不存在或成环）提升为主干，别让内容悄悄消失
+    for (const [i, n] of queue) {
+      warn.push(`节点 "${n.id}" 的 parent "${n.parent}" 不存在或成环，已提升为主干分支`)
+      const node = normalizeNode({ ...n, parent: null }, { level: 1, caseId, index: i, locale })
+      if (seen.has(node.id)) continue
+      seen.add(node.id); byId.set(node.id, node); branches.push(node)
     }
 
     root.children = branches
@@ -131,6 +133,8 @@ export function buildModel(data) {
       }
     }
 
+    const depth = Math.max(...all.map((n) => n.level))
+    if (depth > 4) warn.push(`case "${caseId}" 嵌套到了 ${depth} 层，总览下最深的卡基本读不清（超过 4 层建议把深链拆成独立主干或案卷）`)
     if (all.length < 10) warn.push(`case "${caseId}" 只有 ${all.length} 个节点，板面会明显空旷（建议 12–35 个）`)
     if (all.length > 60) warn.push(`case "${caseId}" 有 ${all.length} 个节点，即使缩小卡片也会挤成一团（超过 60 请拆成多个 case）`)
 
@@ -152,8 +156,8 @@ export function buildModel(data) {
       leaves,
       nodes: all,
       byId: new Map(all.map((n) => [n.id, n])),
-      // 阅读顺序：root → L1 → 该 L1 的 L2 → 下一个 L1 …
-      order: [root, ...branches.flatMap((b) => [b, ...b.children])],
+      // 阅读顺序：深度优先——root → 主干 → 它的整条证据链 → 下一个主干 …
+      order: (function dfs(n) { return [n, ...n.children.flatMap(dfs)] })(root),
     }
   })
 

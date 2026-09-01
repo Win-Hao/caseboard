@@ -26,7 +26,7 @@ The bottom panel shows one case at a time, switchable left/right. One topic = on
   "label":  "咖啡萃取",                // required, name shown in the bottom panel, ≤ 12 chars
   "accent": "#8c171d",                // optional, primary color (threads/titles/highlights). Default #8c171d
   "root":   { /* Node, L0 */ },       // required
-  "nodes":  [ /* Node[], L1 + L2 */ ] // required
+  "nodes":  [ /* Node[]: branches + evidence, any depth */ ] // required
 }
 ```
 
@@ -35,7 +35,8 @@ The bottom panel shows one case at a time, switchable left/right. One topic = on
 ```jsonc
 {
   "id":      "grind",            // required, unique within the case. lowercase-hyphenated.
-  "parent":  null,               // L1: null (hangs off root); L2: the id of its parent L1
+  "parent":  null,               // null = main branch (hangs off root); otherwise the id of
+                                 // any existing node — chains may nest deeper than two levels
   "kind":    "dossier",          // required, see the card type table in SKILL.md
   "kicker":  "变量一",            // optional, small label at the top of the card, ≤ 8 chars
   "title":   "研磨度",            // required, ≤ 20 CJK chars / 30 Latin chars
@@ -66,8 +67,8 @@ The bottom panel shows one case at a time, switchable left/right. One topic = on
 | Rule | Consequence when broken |
 |---|---|
 | `id` unique within its case | duplicates overwrite each other, threads connect wrong |
-| `parent` points to an existing node in the same case with `parent: null` | pointing at an L2 gets treated as an L1 |
-| Max 2 levels (L1 + L2) | L3 is not rendered |
+| `parent` resolves to an existing node in the same case (no cycles) | unresolved parents are promoted to main branches with a warning |
+| Depth ≤ 4 levels recommended | deeper nests render ever smaller; past 4 the model warns and check fails |
 | `title` / `summary` over length | `textOverflows` diagnostic fires, card text truncated |
 | `facts` > 12 entries | truncated to 12; cards draw what fits, chart/timeline plot the first 6 |
 | `image` must load | on failure the card area stays blank, `imageFailures` fires |

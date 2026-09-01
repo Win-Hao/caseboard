@@ -59,16 +59,17 @@ export function buildThreads(caseModel, layout, accent, anchors) {
     const b = anchors.get(to.id)
     if (a && b) links.push([a, b])
   }
-  for (const branch of caseModel.branches) {
-    link(caseModel.root, branch)
-    for (const leaf of branch.children) link(branch, leaf)
+  // 任意深度：每个有 parent 的节点连到它的父节点
+  for (const n of caseModel.nodes) {
+    if (!n.parent) continue
+    const parent = caseModel.byId.get(n.parent)
+    if (parent) link(parent, n)
   }
   // 除 root 外，每张卡都该至少连着一根线。连不上说明树结构断了。
   const connected = new Set()
-  for (const branch of caseModel.branches) {
-    connected.add(branch.id)
-    for (const leaf of branch.children) connected.add(leaf.id)
-  }
+  ;(function walk(n) {
+    for (const ch of n.children) { connected.add(ch.id); walk(ch) }
+  })(caseModel.root)
   const orphanIds = caseModel.nodes
     .filter((n) => n.level > 0 && !connected.has(n.id))
     .map((n) => n.id)

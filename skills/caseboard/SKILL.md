@@ -21,7 +21,7 @@ This skill is only invoked explicitly via `/caseboard <topic or material>`. The 
 
 ### Step 1: Decompose the topic (**the most important step — never skip it**)
 
-Break the topic into **three levels**. This structure directly determines whether the board looks good and works well.
+Break the topic into levels. The default shape below — root, dimensions, evidence — fits most topics and stays the most legible; depth beyond it is a judgment call you make from the material, not a rule.
 
 ```
 L0  root            1        the topic itself           → large central photo card, "Start here"
@@ -34,6 +34,8 @@ L2  evidence        2–5/L1   concrete facts, defs, data  → slips/notes/clipp
 - **L1 entries are "dimensions", not "list items".** For coffee brewing, L1 should be `grind` / `water temp` / `ratio` / `extraction yield`, not `step 1` / `step 2`.
 - **Keep L1 between 3 and 7.** Fewer than 3 and there's no sense of hierarchy; more than 7 and the board gets crowded.
 - **Every L2 must be verifiable, concrete content**: a formula, a number, a quoted sentence, a year, a license clause. Vague "this matters a lot" doesn't belong.
+- **Nest deeper only where the material genuinely chains.** The renderer supports any depth — an evidence node can carry its own children (mechanism → sub-mechanism → measurement), each level drawn smaller and pushed further out. Use it for the one or two branches that truly nest; never pad depth for show. Past 4 levels the deepest cards stop being readable at overview (the model warns and `check` fails) — a branch that wants to go that deep is usually a case of its own.
+- **Write like a person, not a spec sheet.** `summary` and `detail` get read off a corkboard. Plain words, concrete claims, verbs over bureaucratic filler: "Every variable ultimately maps back to extraction yield" reads stiff; "whatever you tweak, the yield is where it shows up" reads like a human pinned it there.
 - **Total node count 12–35 per case is the sweet spot; up to 60 works.** Below 12 the board looks empty (coverage < 0.3). Past 30 nodes the renderer shrinks every card automatically (∝ √(30/n), floored at ×0.7) so one board holds more notes at the cost of smaller overview text; above 60 `npm run check` fails outright — split into cases. The project's diagnostics report the actual coverage and the applied scale.
 - **Every node needs a `summary`** (one sentence shown on the card, ≤ 30 CJK chars / ≤ 60 Latin chars) **and a `detail`** (focus-panel body, 2–5 sentences). Anything that doesn't fit on the card goes into `detail`.
 
@@ -131,7 +133,7 @@ cd <output-dir> && npm install
 
 `<skill-dir>` is wherever this SKILL.md actually lives — the skill may be installed in `~/.claude/skills/`, a project-level `.claude/skills/`, or elsewhere; never hardcode it. Use rsync, not `cp -R`: the template dir may contain tens of MB of leftover `node_modules`, and BSD cp nests into `<output-dir>/template/` when the target exists.
 
-Then **overwrite `data/board.json`**. The full schema is in `references/schema.md` — read it before writing. There aren't many fields, but a few constraints matter (`id` unique, `parent` must point to an existing L1, `facts` max 12 — the card face draws the first ~4, the focus panel shows them all, so put the headline numbers first).
+Then **overwrite `data/board.json`**. The full schema is in `references/schema.md` — read it before writing. There aren't many fields, but a few constraints matter (`id` unique, `parent` must point to an existing node, `facts` max 12 — the card face draws the first ~4, the focus panel shows them all, so put the headline numbers first).
 
 Images go into `public/`; reference them as `/filename.png` in the JSON. If there are no images, omit the `image` field — never fill in placeholder URLs.
 
@@ -203,7 +205,7 @@ Mention that `npm run build` produces a static site they can host anywhere — b
 
 **Chinese and English**: the runtime detects the content language and switches UI copy, card type labels (`档案`/`FILE`), and panel headings accordingly. Writing English content requires zero configuration. CJK line-breaking and font fallback (Courier Prime + Songti) are prewired; a `summary` within 30 CJK chars / 60 Latin chars will not overflow.
 
-**Two levels only.** If a `parent` points to another L2 node, the runtime re-hangs it on the grandparent and warns — you never silently get an unconnected orphan card, but fix the structure in the JSON anyway.
+**Any depth renders.** `parent` may point to any existing node; chains nest with shrinking cards. A `parent` that doesn't resolve (missing id, cycle) gets promoted to a main branch with a warning — nothing silently disappears, but fix the structure in the JSON anyway.
 
 **Video**: add `video: "https://www.youtube.com/embed/XXX"` to a node; the focus panel renders it as a vintage monitor.
 

@@ -29,6 +29,13 @@ export const ROOT_SIZE = [5.4, 6.0]
  */
 export const LEVEL_SCALE = { 0: 1, 1: 1.16, 2: 0.9 }
 
+/** 任意层级的缩放。前三层查表，更深的按 0.85 逐级递减、0.55 封底——
+    总览下仍分得出主次，字号不至于不可读。 */
+export function levelScale(level) {
+  if (level in LEVEL_SCALE) return LEVEL_SCALE[level]
+  return Math.max(0.55, +(0.9 * 0.85 ** (level - 2)).toFixed(3))
+}
+
 export const PIN_COLORS = ['#b8232a', '#c9772a', '#2f6d8c', '#4d7a4a', '#d8b23a', '#7a4a86']
 
 export const BOARD = {

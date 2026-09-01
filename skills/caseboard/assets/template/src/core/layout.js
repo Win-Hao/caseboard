@@ -85,15 +85,24 @@ function attempt(caseModel, seed, innerW, innerH) {
     const p = put(b, Math.cos(a) * rx, Math.sin(a) * ry, rng.jitter(MAX_TILT))
     p.angle = a
 
-    b.children.forEach((kid, j) => {
-      const spread = b.children.length === 1 ? 0 : (j / (b.children.length - 1) - 0.5)
-      const ka = a + spread * rng.range(1.0, 1.6) + rng.jitter(0.2)
-      const dist =
-        (Math.hypot(b.size[0], b.size[1]) + Math.hypot(kid.size[0], kid.size[1])) * 0.5 *
-        rng.range(1.0, 1.35)
-      put(kid, p.x + Math.cos(ka) * dist, p.y + Math.sin(ka) * dist * 0.85, rng.jitter(MAX_TILT))
-    })
+    placeKids(b, p, a)
   })
+
+  // 递归放置证据链：孩子沿父节点背离板心的方向铺开，层越深扇面越窄、离得越近，
+  // 剩下的交给松弛器。两层的板和从前完全一致（同种子同布局）。
+  function placeKids(parentNode, parentPlaced, baseAngle) {
+    const kids = parentNode.children
+    kids.forEach((kid, j) => {
+      const spread = kids.length === 1 ? 0 : (j / (kids.length - 1) - 0.5)
+      const tighten = Math.max(0.55, 1 - (kid.level - 2) * 0.22)
+      const ka = baseAngle + spread * rng.range(1.0, 1.6) * tighten + rng.jitter(0.2)
+      const dist =
+        (Math.hypot(parentNode.size[0], parentNode.size[1]) + Math.hypot(kid.size[0], kid.size[1])) * 0.5 *
+        rng.range(1.0, 1.35)
+      const kp = put(kid, parentPlaced.x + Math.cos(ka) * dist, parentPlaced.y + Math.sin(ka) * dist * 0.85, rng.jitter(MAX_TILT))
+      if (kid.children.length) placeKids(kid, kp, ka)
+    })
+  }
 
   const clampInside = (p) => {
     if (p.node.level === 0) { p.x = 0; p.y = 0; return }
