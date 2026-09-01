@@ -410,9 +410,16 @@ const invalidate = (n = 1) => { framesLeft = Math.max(framesLeft, n) }
 function tick() {
   requestAnimationFrame(tick)
   if (!world || !controller) return
+  const camX = controller.state.x
+  const camY = controller.state.y
   const cameraMoving = controller.update()
+  // 相机位移乘 zoom ≈ 屏幕上的拖动量：同样的手感不随缩放级别变
+  const threadsMoving = world.threads.simulate(
+    (controller.state.x - camX) * controller.state.zoom,
+    (controller.state.y - camY) * controller.state.zoom,
+  )
   const hoverMoving = applyHover(world.pieces, hoveredId)
-  if (cameraMoving || hoverMoving) invalidate(2)
+  if (cameraMoving || hoverMoving || threadsMoving) invalidate(2)
   if (framesLeft <= 0) return
   framesLeft -= 1
   renderer.render(scene, camera)
