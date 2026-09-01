@@ -82,6 +82,21 @@ cp -R caseboard/skills/* ~/.codex/skills/    # Codex
 
 **claude.ai**：从 [Releases](https://github.com/Win-Hao/caseboard/releases) 下载 `caseboard.skill`，在 Settings → Capabilities 里上传（该包已去掉 Claude Code 专有的 frontmatter 字段）。
 
+## 更新
+
+按安装方式对号入座：
+
+```bash
+claude plugin update caseboard@caseboard   # plugin 安装（或 /plugin marketplace update caseboard）
+npx skills add Win-Hao/caseboard -g        # skills CLI：重跑 add 即刷新
+git pull                                   # clone + 软链接：拉一下就完事
+```
+
+手动复制的：拉取仓库后重跑那条 `cp -R`。claude.ai：从 Releases 下载最新
+`caseboard.skill` 重新上传即可覆盖旧版。
+
+marketplace 清单没有钉版本号，plugin 更新直接跟随本仓库最新提交。
+
 ## 不经过 agent 直接跑 demo
 
 自带数据是双案卷示例板（Coffee Extraction + Bread Fermentation，英文）：

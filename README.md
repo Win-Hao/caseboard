@@ -82,6 +82,21 @@ cp -R caseboard/skills/* ~/.codex/skills/    # Codex
 
 **claude.ai**: download `caseboard.skill` from [Releases](https://github.com/Win-Hao/caseboard/releases) and upload it under Settings → Capabilities (the package strips the Claude-Code-only frontmatter fields).
 
+## Update
+
+Match your install method:
+
+```bash
+claude plugin update caseboard@caseboard   # plugin (or: /plugin marketplace update caseboard)
+npx skills add Win-Hao/caseboard -g        # skills CLI: re-running add refreshes it
+git pull                                   # clone + symlink: that's the whole update
+```
+
+Manual copies: pull the repo and re-run the `cp -R`. On claude.ai, download the
+latest `caseboard.skill` from Releases and upload it again to replace the old one.
+
+The marketplace entry pins no version, so plugin updates track this repo's latest commit.
+
 ## Run the demo without an agent
 
 The bundled data is a two-case sample board (Coffee Extraction + Bread Fermentation, in English):
