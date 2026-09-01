@@ -1,130 +1,94 @@
-// 左下角的卷宗盒：案卷切换 + 工具条。
+// 左下角的证据吊牌 + 底边的文件夹标签。
+//
+// 吊牌：图钉挂一张牛皮纸 tag，正面是案卷号和两枚工具印（搜索/回全景），
+// 背面是操作速查。翻面只由 ? 印章触发（悬停即翻、点击钉住）——
+// 整卡 hover 翻面会让正面的按钮永远点不到。
+// 标签：一个案卷一个折角 tab，当前页抬起。只有一个案卷时整排隐藏。
 
 import { icons } from './icons.js'
 import { strings } from '../core/i18n.js'
 
-export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onZoom, onSearch, onToggleHelp }) {
+export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSearch }) {
   const t = strings(locale)
-  const el = document.createElement('section')
-  el.className = 'kb-console'
-  el.innerHTML = `
-    <div class="kb-console-heading">
-      <span>${t.caseWord}</span><strong data-role="index">01 / ${String(cases.length).padStart(2, '0')}</strong>
-    </div>
-    <div class="kb-console-controls">
-      <button type="button" data-role="prev" aria-label="${t.prevCase}">${icons.prev}</button>
-      <div class="kb-picker">
-        <button type="button" class="kb-picker-trigger" data-role="trigger"
-                aria-haspopup="listbox" aria-expanded="false">
-          <span data-role="label"></span>${icons.chevronDown}
-        </button>
+  const pad2 = (n) => String(n + 1).padStart(2, '0')
+
+  /* ── 文件夹标签 ── */
+  const tabs = document.createElement('nav')
+  tabs.className = 'kb-tabs'
+  tabs.setAttribute('aria-label', t.caseWord)
+  tabs.hidden = cases.length <= 1
+  tabs.innerHTML = cases
+    .map((c, i) => `
+      <button type="button" class="kb-tab" data-index="${i}">
+        <span>${pad2(i)}</span>${c.label}
+      </button>`)
+    .join('')
+  tabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-index]')
+    if (btn) onSelectCase(Number(btn.dataset.index))
+  })
+  root.appendChild(tabs)
+
+  /* ── 证据吊牌 ── */
+  const tag = document.createElement('section')
+  tag.className = 'kb-tag'
+  tag.innerHTML = `
+    <span class="kb-tag-pin" aria-hidden="true"></span>
+    <div class="kb-tag-card">
+      <div class="kb-tag-face kb-tag-front">
+        <span class="kb-tag-hole" aria-hidden="true"></span>
+        <span class="kb-tag-stamp">${t.caseWord}</span>
+        <strong class="kb-tag-no" data-role="index">№ 01 / ${String(cases.length).padStart(2, '0')}</strong>
+        <span class="kb-tag-label" data-role="label"></span>
+        <div class="kb-tag-tools">
+          <button type="button" data-role="search" aria-label="${t.search}" title="${t.search} (⌘K)">${icons.search}</button>
+          <button type="button" data-role="home" aria-label="${t.home}" title="${t.home} (0)">${icons.home}</button>
+          <button type="button" data-role="flip" aria-label="${t.helpTitle}" aria-pressed="false" title="${t.helpTitle}">?</button>
+        </div>
       </div>
-      <button type="button" data-role="next" aria-label="${t.nextCase}">${icons.next}</button>
-    </div>
-    <nav class="kb-console-tools" aria-label="视图工具">
-      <button type="button" data-role="home" aria-label="${t.home}" title="${t.home} (0)">${icons.home}</button>
-      <button type="button" data-role="in" aria-label="${t.zoomIn}" title="${t.zoomIn}">${icons.zoomIn}</button>
-      <button type="button" data-role="out" aria-label="${t.zoomOut}" title="${t.zoomOut}">${icons.zoomOut}</button>
-      <button type="button" data-role="search" aria-label="${t.search}" title="${t.search} (⌘K)">${icons.search}</button>
-      <button type="button" data-role="help" aria-label="${t.helpTitle}" aria-pressed="true" title="${t.helpTitle}">${icons.info}</button>
-    </nav>`
-  root.appendChild(el)
+      <div class="kb-tag-face kb-tag-back">
+        <span class="kb-tag-hole" aria-hidden="true"></span>
+        <p>${t.helpLine1}</p>
+        <p>${t.helpLine2}</p>
+        <div class="kb-tag-tools">
+          <button type="button" data-role="flip-back" aria-label="${t.helpTitle}" title="${t.helpTitle}">?</button>
+        </div>
+      </div>
+    </div>`
+  root.appendChild(tag)
 
-  const picker = el.querySelector('.kb-picker')
-  const trigger = el.querySelector('[data-role="trigger"]')
-  const labelEl = el.querySelector('[data-role="label"]')
-  const indexEl = el.querySelector('[data-role="index"]')
-  const prevBtn = el.querySelector('[data-role="prev"]')
-  const nextBtn = el.querySelector('[data-role="next"]')
+  const indexEl = tag.querySelector('[data-role="index"]')
+  const labelEl = tag.querySelector('[data-role="label"]')
+  const flipBtn = tag.querySelector('[data-role="flip"]')
 
-  let popover = null
-  let current = 0
-
-  function closePopover() {
-    if (!popover) return
-    popover.remove()
-    popover = null
-    trigger.setAttribute('aria-expanded', 'false')
+  let pinnedFlip = false
+  const applyFlip = (on) => {
+    tag.classList.toggle('is-flipped', on)
+    flipBtn.setAttribute('aria-pressed', String(on))
   }
+  flipBtn.addEventListener('click', () => { pinnedFlip = !pinnedFlip; applyFlip(pinnedFlip) })
+  tag.querySelector('[data-role="flip-back"]').addEventListener('click', () => { pinnedFlip = false; applyFlip(false) })
+  flipBtn.addEventListener('pointerenter', () => { if (!pinnedFlip) applyFlip(true) })
+  tag.addEventListener('pointerleave', () => { if (!pinnedFlip) applyFlip(false) })
 
-  function openPopover() {
-    if (popover) { closePopover(); return }
-    popover = document.createElement('div')
-    popover.className = 'kb-picker-popover'
-    popover.setAttribute('role', 'listbox')
-    popover.innerHTML = `<div class="kb-picker-list">${cases
-      .map((c, i) => `
-        <button type="button" role="option" data-index="${i}"
-                class="${i === current ? 'is-active' : ''}" aria-selected="${i === current}">
-          <span>${String(i + 1).padStart(2, '0')}</span><strong>${c.label}</strong>${icons.check}
-        </button>`)
-      .join('')}</div>`
-    popover.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-index]')
-      if (!btn) return
-      closePopover()
-      onSelectCase(Number(btn.dataset.index))
-    })
-    picker.appendChild(popover)
-    trigger.setAttribute('aria-expanded', 'true')
-    popover.querySelector('button.is-active')?.focus()
-  }
-
-  trigger.addEventListener('click', openPopover)
-  document.addEventListener('pointerdown', (e) => {
-    if (popover && !picker.contains(e.target)) closePopover()
-  })
-
-  // 弹层开着的时候必须能用键盘走完，也必须能 Esc 关掉
-  picker.addEventListener('keydown', (e) => {
-    if (!popover) return
-    const items = [...popover.querySelectorAll('button[data-index]')]
-    if (e.key === 'Escape') { e.preventDefault(); closePopover(); trigger.focus(); return }
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
-    e.preventDefault()
-    const here = items.indexOf(document.activeElement)
-    const step = e.key === 'ArrowDown' ? 1 : -1
-    const next = here < 0
-      ? (step > 0 ? 0 : items.length - 1)
-      : (here + step + items.length) % items.length
-    items[next]?.focus()
-  })
-
-  prevBtn.addEventListener('click', () => onSelectCase(current - 1))
-  nextBtn.addEventListener('click', () => onSelectCase(current + 1))
-  el.querySelector('[data-role="home"]').addEventListener('click', onHome)
-  el.querySelector('[data-role="in"]').addEventListener('click', () => onZoom(1.35))
-  el.querySelector('[data-role="out"]').addEventListener('click', () => onZoom(1 / 1.35))
-  el.querySelector('[data-role="search"]').addEventListener('click', onSearch)
-
-  const helpBtn = el.querySelector('[data-role="help"]')
-  helpBtn.addEventListener('click', () => {
-    const on = helpBtn.getAttribute('aria-pressed') !== 'true'
-    helpBtn.setAttribute('aria-pressed', String(on))
-    onToggleHelp(on)
-  })
+  tag.querySelector('[data-role="search"]').addEventListener('click', onSearch)
+  tag.querySelector('[data-role="home"]').addEventListener('click', onHome)
 
   return {
-    element: el,
+    element: tag,
     setCase(index) {
-      current = index
+      indexEl.textContent = `№ ${pad2(index)} / ${String(cases.length).padStart(2, '0')}`
       labelEl.textContent = cases[index].label
-      indexEl.textContent = `${String(index + 1).padStart(2, '0')} / ${String(cases.length).padStart(2, '0')}`
-      prevBtn.disabled = index === 0
-      nextBtn.disabled = index === cases.length - 1
-      closePopover()
+      for (const btn of tabs.querySelectorAll('.kb-tab')) {
+        const active = Number(btn.dataset.index) === index
+        btn.classList.toggle('is-active', active)
+        if (active) btn.setAttribute('aria-current', 'true')
+        else btn.removeAttribute('aria-current')
+      }
+      // 换案卷时轻轻晃一下，像刚挂上去
+      tag.classList.remove('is-swinging')
+      void tag.offsetWidth
+      tag.classList.add('is-swinging')
     },
-  }
-}
-
-export function createHelpNote(root, locale) {
-  const t = strings(locale)
-  const el = document.createElement('aside')
-  el.className = 'kb-hint'
-  el.innerHTML = `<p>${t.helpLine1}</p><p>${t.helpLine2}</p>`
-  root.appendChild(el)
-  return {
-    element: el,
-    setVisible(v) { el.hidden = !v },
   }
 }

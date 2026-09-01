@@ -42,7 +42,13 @@ export default {
     }
 
     ctx.fillStyle = '#241b14'
-    ctx.font = font(700, 64 * sx)
+    // 标题先按 64 排，放不下就逐档缩小到 44——根卡标题被截成省略号太难看
+    let titleSize = 64
+    ctx.font = font(700, titleSize * sx)
+    while (titleSize > 44 && ctx.measureText(node.title).width > w - 80 * sx) {
+      titleSize -= 4
+      ctx.font = font(700, titleSize * sx)
+    }
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     track({ truncated: drawClipped(ctx, node.title, w / 2, 804 * sy, w - 80 * sx) })

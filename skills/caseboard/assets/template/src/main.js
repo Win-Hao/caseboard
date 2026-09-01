@@ -16,7 +16,7 @@ import { buildPieces, applyHover } from './scene/pieces.js'
 import { buildThreads } from './scene/threads.js'
 import { buildHardware } from './scene/hardware.js'
 import { createCameraController } from './scene/camera.js'
-import { createCaseFile, createHelpNote } from './ui/casefile.js'
+import { createCaseFile } from './ui/casefile.js'
 import { createFocusPanel } from './ui/focus.js'
 import { createPalette } from './ui/palette.js'
 import { strings } from './core/i18n.js'
@@ -149,12 +149,8 @@ const caseFile = createCaseFile(stage, {
     buildCase(i)
   },
   onHome: () => { closeFocus(); controller.home(); invalidate() },
-  onZoom: (f) => { closeFocus(); controller.zoomBy(f); invalidate() },
   onSearch: () => palette.open(),
-  onToggleHelp: (on) => help.setVisible(on),
 })
-
-const help = createHelpNote(stage, model.locale)
 
 const focus = createFocusPanel(stage, {
   locale: model.locale,

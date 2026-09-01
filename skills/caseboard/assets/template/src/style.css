@@ -112,144 +112,140 @@ button, input { font: inherit; color: inherit; border-radius: 0; }
 .kb-viewport canvas { display: block; width: 100%; height: 100%; }
 .kb-viewport[data-hovering="true"] { cursor: pointer; }
 
-/* ── 卷宗盒（左下） ─────────────────────────────────────────────── */
+/* ── 证据吊牌（左下）+ 文件夹标签（底边） ───────────────────────── */
 
-.kb-console {
-  position: absolute; bottom: 22px; left: 22px;
+.kb-tabs {
+  position: absolute; bottom: 0; left: 252px; right: 20px;
+  z-index: 8;
+  display: flex; gap: 7px; align-items: flex-end;
+  overflow-x: auto; scrollbar-width: none;
+}
+.kb-tabs::-webkit-scrollbar { display: none; }
+.kb-tabs[hidden] { display: none; }
+
+.kb-tab {
+  flex: 0 0 auto;
+  max-width: 240px;
+  padding: 10px 20px 13px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: inherit; font-size: 0.76rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #4a3a26; background: linear-gradient(#c8b183, #b39668);
+  border: 1px solid #63502f; border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  box-shadow: inset 0 1px #ecdcb4a8, 4px 0 9px -4px #08060570;
+  transform: translateY(5px);
+  cursor: pointer;
+  transition: transform 0.16s, background 0.16s, color 0.16s;
+}
+.kb-tab span { margin-right: 9px; color: #86242a; font-size: 0.68rem; }
+.kb-tab:hover { transform: translateY(2px); background: linear-gradient(#d3bd90, #bfa273); }
+.kb-tab:focus-visible { outline: 2px solid #8c171d; outline-offset: -3px; }
+.kb-tab.is-active {
+  color: #241a0e; background: linear-gradient(#ecddb1, #d8c290);
+  transform: translateY(0);
+  box-shadow: inset 0 2px #f8ecc9, 5px 0 10px -4px #08060580;
+}
+.kb-tab.is-active span { color: #8c171d; }
+
+.kb-tag {
+  position: absolute; left: 32px; bottom: 26px;
   z-index: 9;
-  width: min(520px, 100vw - 44px);
-  color: var(--case-ink);
-  background: var(--case-bg);
-  border: 1px solid var(--case-border);
-  box-shadow: inset 0 1px #f2e6c7, 6px 7px #0806054d, 14px 18px 38px #0504038f;
-  transition: transform 0.18s, box-shadow 0.18s;
+  width: 192px; height: 236px;
+  perspective: 900px;
 }
-.kb-console:hover,
-.kb-console:focus-within {
-  transform: translateY(-1px);
-  box-shadow: inset 0 2px #f1e4c2, 6px 8px #08060552, 14px 20px 42px #0504038f;
+.kb-tag-card {
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 16px;
+  transform: rotate(-4.5deg);
+  transition: transform 0.55s cubic-bezier(0.32, 1.4, 0.4, 1);
 }
-
-.kb-console-heading {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  min-height: 46px; padding: 9px 42px;
-  border-bottom: 1px solid var(--case-rule);
-}
-.kb-console-heading span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; }
-.kb-console-heading strong {
-  color: #7f1820; font-size: 1rem; font-weight: 700; letter-spacing: 0.04em;
+.kb-tag.is-flipped .kb-tag-card { transform: rotate(-4.5deg) rotateY(180deg); }
+.kb-tag.is-swinging:not(.is-flipped) .kb-tag-card { animation: kb-tag-swing 0.9s ease-out; }
+@keyframes kb-tag-swing {
+  0% { transform: rotate(-10deg); }
+  45% { transform: rotate(-1.6deg); }
+  75% { transform: rotate(-5.8deg); }
+  100% { transform: rotate(-4.5deg); }
 }
 
-.kb-console-controls {
-  display: grid; grid-template-columns: 1fr minmax(0, 4fr) 1fr; align-items: stretch;
+.kb-tag-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  color: #2f2313;
+  /* 牛皮纸：斜向色带 + 顶部切角的吊牌轮廓 */
+  background: linear-gradient(158deg, #cfb078, #c2a163 52%, #b18e55);
+  box-shadow: inset 0 0 0 1px #63502f, inset 0 0 34px #7d61307a;
+  clip-path: polygon(15% 0, 85% 0, 100% 11%, 100% 100%, 0 100%, 0 11%);
+  /* 阴影只能放在面上：filter 放在 card 上会扁平化 3D，翻面就废了 */
+  filter: drop-shadow(9px 13px 15px #05040388);
 }
-.kb-console-controls > button,
-.kb-picker-trigger {
-  min-height: 56px; background: none; border: 0; cursor: pointer;
-}
-.kb-console-controls > button { display: grid; place-items: center; }
-.kb-console-controls > button:first-child { border-right: 1px solid #99866a; }
-.kb-console-controls > button:hover,
-.kb-console-controls > button:focus-visible,
-.kb-console-tools button:hover,
-.kb-console-tools button:focus-visible { background: #342820; color: #eee1c3; }
-.kb-console-controls > button:disabled { opacity: 0.32; cursor: not-allowed; }
-.kb-console-controls > button:disabled:hover { background: none; color: inherit; }
+.kb-tag-back { transform: rotateY(180deg); }
 
-.kb-console svg {
-  width: 31px; fill: none; stroke: currentColor;
+.kb-tag-hole {
+  position: absolute; top: 9px; left: 50%;
+  width: 13px; height: 13px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #17110a;
+  box-shadow: 0 0 0 4px #a3854e, 0 0 0 5px #63502f, 0 1px 2px #f4e7c25c inset;
+}
+.kb-tag-pin {
+  position: absolute; top: 6px; left: 50%; z-index: 2;
+  width: 17px; height: 17px; margin-left: -8.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #ea7c83, #b8232a 52%, #6d0e15);
+  box-shadow: 2px 5px 7px #05040485, inset 0 -2px 3px #59080e;
+}
+
+.kb-tag-stamp {
+  display: block; width: max-content;
+  margin: 42px auto 0;
+  padding: 3px 13px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.32em; text-indent: 0.32em;
+  color: #8c171d; border: 2px solid #8c171db3;
+  transform: rotate(-3deg);
+  opacity: 0.88;
+}
+.kb-tag-no {
+  display: block; margin-top: 14px;
+  text-align: center; font-size: 1.04rem; font-weight: 700; letter-spacing: 0.07em;
+}
+.kb-tag-label {
+  display: block; margin: 7px 14px 0;
+  text-align: center; font-size: 0.78rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  opacity: 0.72;
+}
+
+.kb-tag-tools {
+  position: absolute; bottom: 13px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 11px;
+}
+.kb-tag-tools button {
+  display: grid; place-items: center;
+  width: 42px; height: 42px;
+  font: inherit; font-size: 1.05rem; font-weight: 700;
+  color: #4a3a24; background: #0000000a;
+  border: 1.5px solid #6b563a; border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.kb-tag-tools button:hover,
+.kb-tag-tools button:focus-visible,
+.kb-tag-tools button[aria-pressed="true"] { background: #342820; color: #eee1c3; }
+.kb-tag-tools svg {
+  width: 21px; fill: none; stroke: currentColor;
   stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
 
-.kb-picker { position: relative; min-width: 0; height: 100%; }
-.kb-picker-trigger {
-  display: grid; grid-template-columns: minmax(0, 1fr) 22px; align-items: center;
-  width: 100%; height: 100%; padding: 0 13px 0 18px;
-  text-align: center; font-size: 1.18rem; font-weight: 600;
-  border-right: 1px solid #99866a;
+.kb-tag-back p {
+  margin: 0 18px; font-size: 0.74rem; line-height: 1.65;
 }
-.kb-picker-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kb-picker-trigger svg { width: 20px; transition: transform 0.15s; }
-.kb-picker-trigger[aria-expanded="true"] { background: #342820; color: #eee1c3; }
-.kb-picker-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
-
-.kb-picker-popover {
-  position: absolute; bottom: calc(100% + 10px); left: 50%;
-  transform: translateX(-50%) rotate(-0.25deg);
-  z-index: 30;
-  width: min(390px, 100vw - 32px);
-  color: #241c13;
-  /* 左侧红色装订线 */
-  background: linear-gradient(90deg, transparent 38px, #9c2b2d66 38px 39px, transparent 39px), #e5d4aa;
-  border: 1px solid #6c5638;
-  box-shadow: 7px 9px #130d0870, 16px 20px 34px #08050396;
-  overflow: hidden;
-}
-.kb-picker-list { max-height: min(450px, 100dvh - 230px); overflow-y: auto; overscroll-behavior: contain; }
-.kb-picker-list button {
-  display: grid; grid-template-columns: 34px minmax(0, 1fr) 22px; align-items: center;
-  width: 100%; min-height: 46px; padding: 7px 12px 7px 52px;
-  text-align: left; background: none; border: 0; border-bottom: 1px solid #8e7b5d66; cursor: pointer;
-}
-.kb-picker-list button:last-child { border-bottom: 0; }
-.kb-picker-list button > span { color: #7f1820; font-size: 0.76rem; font-weight: 700; }
-.kb-picker-list button strong {
-  font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.kb-picker-list button svg {
-  width: 18px; opacity: 0; transform: translateX(-4px); transition: opacity 0.12s, transform 0.12s;
-}
-/* 悬停/键盘高亮。缺了这条，弹出的案卷列表点上去没有任何反馈，
-   看起来像是禁用的。用比 is-active 浅一档的底色，两种状态要能区分。 */
-.kb-picker-list button:hover,
-.kb-picker-list button:focus-visible {
-  background: #b8a074;
-  color: #1f1810;
-  outline: 0;
-}
-.kb-picker-list button:hover > span,
-.kb-picker-list button:focus-visible > span { color: #6d1418; }
-.kb-picker-list button:hover svg,
-.kb-picker-list button:focus-visible svg { opacity: 0.55; transform: translateX(0); }
-
-.kb-picker-list button.is-active { background: #342820; color: #f2e5c7; }
-.kb-picker-list button.is-active > span { color: #e0666b; }
-.kb-picker-list button.is-active svg { opacity: 1; transform: translateX(0); }
-.kb-picker-list button.is-active:hover,
-.kb-picker-list button.is-active:focus-visible { background: #4a3a2c; color: #fbf1d8; }
-.kb-picker-list button.is-active:hover > span { color: #e0666b; }
-
-.kb-console-tools {
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-  border-top: 1px solid var(--case-rule);
-}
-.kb-console-tools button {
-  display: grid; place-items: center;
-  min-width: 0; min-height: 70px; padding: 9px 4px;
-  background: none; border: 0; border-right: 1px solid var(--case-rule);
-  cursor: pointer; position: relative;
-}
-.kb-console-tools button:last-child { border-right: 0; }
-.kb-console-tools svg { width: 32px; height: 32px; stroke-width: 1.55; }
-.kb-console-tools button[aria-pressed="true"] { background: #382d24; color: #f0dfbd; }
-.kb-console-tools button[aria-pressed="true"]::after {
-  content: ""; position: absolute; top: 9px; right: 9px;
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #891b23; box-shadow: 0 0 0 2px #ead9b6;
-}
-
-/* ── 便条（帮助） ───────────────────────────────────────────────── */
-
-.kb-hint {
-  position: absolute; bottom: 212px; left: 22px; z-index: 7;
-  width: min(320px, 100vw - 44px); padding: 14px 16px;
-  color: #231f19; background: #d0c09d; border: 1px solid #8c7b61;
-  box-shadow: 8px 12px #0c0a0870;
-  transform: rotate(-0.5deg);
-}
-.kb-hint p { margin: 0; font-size: 0.76rem; line-height: 1.5; }
-.kb-hint p + p { margin-top: 7px; }
-.kb-hint[hidden] { display: none; }
+.kb-tag-back p:first-of-type { margin-top: 46px; }
+.kb-tag-back p + p { margin-top: 9px; }
+.kb-tag-back strong { color: #6d1418; }
 
 /* ── 焦点面板：黄色便签纸（右侧） ──────────────────────────────── */
 
@@ -562,11 +558,11 @@ button, input { font: inherit; color: inherit; border-radius: 0; }
 
 /* ── 窄屏 ──────────────────────────────────────────────────────── */
 
-.kb-stage[data-layout="compact"] .kb-console {
-  left: 10px; right: 10px; bottom: 10px; width: calc(100vw - 20px);
+.kb-stage[data-layout="compact"] .kb-tag {
+  left: 12px; bottom: 12px;
+  transform: scale(0.8); transform-origin: bottom left;
 }
-.kb-stage[data-layout="compact"] .kb-console-tools button { min-height: 62px; }
-.kb-stage[data-layout="compact"] .kb-console-tools svg { width: 28px; height: 28px; }
+.kb-stage[data-layout="compact"] .kb-tabs { left: 178px; right: 10px; }
 .kb-stage[data-layout="compact"] .kb-detail {
   left: 12px; right: 12px; width: calc(100vw - 24px);
   bottom: max(var(--focus-bottom), 200px);
@@ -579,7 +575,6 @@ button, input { font: inherit; color: inherit; border-radius: 0; }
 .kb-stage[data-layout="compact"] .kb-detail h1 { font-size: clamp(1.7rem, 9vw, 2.6rem); }
 .kb-stage[data-layout="compact"] .kb-video-screen { height: 190px; }
 .kb-stage[data-layout="compact"] .kb-detail-media img { height: 190px; }
-.kb-stage[data-layout="compact"] .kb-hint { display: none; }
 .kb-stage[data-layout="compact"] .kb-search-results button {
   grid-template-columns: 30px minmax(0, 1fr) 20px; gap: 8px; min-height: 68px;
 }
