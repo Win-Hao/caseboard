@@ -22,8 +22,20 @@ const FORCE_SMOOTH = 0.18   // 激励低通系数（越小越绵）
 const FORCE_MAX = 0.045     // 单步力上限（世界单位）
 const DAMPING = 0.94        // 每步速度保留比例（60Hz 步长下约 1s 晃停）
 const REST_PULL = 0.026     // 回位弹簧强度
+const BEND = 0.32           // 抗弯：形变场的拉普拉斯平滑，压锯齿模态
 const CONSTRAINT_ITERS = 3  // 段长约束迭代次数
 const SLEEP_EPS = 0.0004    // 速度低于这个（且偏移够小）就休眠
+
+/** 开曲线 Chaikin 切角：count 个点 → 2*count-2 个点，端点保留。 */
+function chaikin(src, out, count) {
+  out[0] = src[0]
+  let k = 1
+  for (let i = 0; i < count - 1; i += 1) {
+    if (i > 0) { out[k] = 0.75 * src[i] + 0.25 * src[i + 1]; k += 1 }
+    if (i < count - 2) { out[k] = 0.25 * src[i] + 0.75 * src[i + 1]; k += 1 }
+  }
+  out[k] = src[count - 1]
+}
 
 /** 两点之间一条会下垂的线。 */
 function threadCurve(a, b, sag, lift) {
@@ -97,11 +109,17 @@ export function buildThreads(caseModel, layout, accent, anchors) {
     for (let i = 0; i < count - 1; i += 1) {
       seg[i] = Math.hypot(x[i + 1] - x[i], y[i + 1] - y[i])
     }
-    return { count, x, y, px, py, rx, ry, z, seg, w }
+    // 渲染前做一遍 Chaikin 切角细分：质点折线 → 圆滑曲线。z 静态，预细分一次。
+    const sub = 2 * count - 2
+    const sx = new Float32Array(sub)
+    const sy = new Float32Array(sub)
+    const sz = new Float32Array(sub)
+    chaikin(z, sz, count)
+    return { count, x, y, px, py, rx, ry, z, seg, w, sub, sx, sy, sz }
   })
 
   /* ── 几何：固定拓扑，每帧只重写 position/normal ── */
-  const totalRings = chains.reduce((n, c) => n + c.count, 0)
+  const totalRings = chains.reduce((n, c) => n + c.sub, 0)
   const makeBatch = (radius, zShift, material, renderOrder) => {
     const geo = new BufferGeometry()
     const positions = new Float32Array(totalRings * RADIAL * 3)
@@ -109,7 +127,7 @@ export function buildThreads(caseModel, layout, accent, anchors) {
     const indices = []
     let ringBase = 0
     for (const c of chains) {
-      for (let i = 0; i < c.count - 1; i += 1) {
+      for (let i = 0; i < c.sub - 1; i += 1) {
         for (let r = 0; r < RADIAL; r += 1) {
           const r2 = (r + 1) % RADIAL
           const a0 = (ringBase + i) * RADIAL + r
@@ -119,7 +137,7 @@ export function buildThreads(caseModel, layout, accent, anchors) {
           indices.push(a0, b0, a1, a1, b0, b1)
         }
       }
-      ringBase += c.count
+      ringBase += c.sub
     }
     geo.setIndex(indices)
     geo.setAttribute('position', new BufferAttribute(positions, 3).setUsage(DynamicDrawUsage))
@@ -142,13 +160,13 @@ export function buildThreads(caseModel, layout, accent, anchors) {
     const { positions, normals, radius, zShift } = batch
     let v = 0
     for (const c of chains) {
-      for (let i = 0; i < c.count; i += 1) {
+      for (let i = 0; i < c.sub; i += 1) {
         // 切向量：中间用两侧差分，端点用单侧
         const i0 = Math.max(0, i - 1)
-        const i1 = Math.min(c.count - 1, i + 1)
-        let tx = c.x[i1] - c.x[i0]
-        let ty = c.y[i1] - c.y[i0]
-        let tz = c.z[i1] - c.z[i0]
+        const i1 = Math.min(c.sub - 1, i + 1)
+        let tx = c.sx[i1] - c.sx[i0]
+        let ty = c.sy[i1] - c.sy[i0]
+        let tz = c.sz[i1] - c.sz[i0]
         const tl = Math.hypot(tx, ty, tz) || 1
         tx /= tl; ty /= tl; tz /= tl
         // N1 = T × ez（贴墙平面内的法向），N2 = T × N1（近似 ±Z）
@@ -158,9 +176,9 @@ export function buildThreads(caseModel, layout, accent, anchors) {
         const n2x = ty * 0 - tz * n1y
         const n2y = tz * n1x - tx * 0
         const n2z = tx * n1y - ty * n1x
-        const cx = c.x[i] + ox
-        const cy = c.y[i] + oy
-        const cz = c.z[i] + zShift
+        const cx = c.sx[i] + ox
+        const cy = c.sy[i] + oy
+        const cz = c.sz[i] + zShift
         for (let r = 0; r < RADIAL; r += 1) {
           const ang = (r / RADIAL) * Math.PI * 2
           const ca = Math.cos(ang)
@@ -185,6 +203,10 @@ export function buildThreads(caseModel, layout, accent, anchors) {
   }
 
   const writeAll = () => {
+    for (const c of chains) {
+      chaikin(c.x, c.sx, c.count)
+      chaikin(c.y, c.sy, c.count)
+    }
     writeBatch(main, 0, 0)
     writeBatch(shade, SHADE_OFFSET.x, SHADE_OFFSET.y)
   }
@@ -255,6 +277,18 @@ export function buildThreads(caseModel, layout, accent, anchors) {
           c.x[i + 1] -= dx * diff * m1
           c.y[i + 1] -= dy * diff * m1
         }
+      }
+      // 抗弯：把每个内点的「偏离量」往两侧邻居的偏离均值拉。
+      // 平滑的是形变场而不是位置本身——静止垂度不受影响，锯齿模态被压掉。
+      for (let i = 1; i < last; i += 1) {
+        const dev0x = c.x[i - 1] - c.rx[i - 1]
+        const dev0y = c.y[i - 1] - c.ry[i - 1]
+        const dev2x = c.x[i + 1] - c.rx[i + 1]
+        const dev2y = c.y[i + 1] - c.ry[i + 1]
+        const devx = c.x[i] - c.rx[i]
+        const devy = c.y[i] - c.ry[i]
+        c.x[i] += ((dev0x + dev2x) / 2 - devx) * BEND
+        c.y[i] += ((dev0y + dev2y) / 2 - devy) * BEND
       }
       for (let i = 1; i < last; i += 1) {
         const v = Math.abs(c.x[i] - c.px[i]) + Math.abs(c.y[i] - c.py[i])
