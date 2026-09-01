@@ -119,7 +119,7 @@ export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSe
         <p>${t.helpLine1}</p>
         <p>${t.helpLine2}</p>
         <div class="kb-tag-tools">
-          <button type="button" data-role="flip-back" aria-label="${t.helpTitle}" title="${t.helpTitle}">?</button>
+          <button type="button" data-role="flip-back" aria-label="${t.back}" title="${t.back}">✕</button>
         </div>
       </div>
     </div>`
