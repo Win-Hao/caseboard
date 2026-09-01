@@ -68,7 +68,8 @@ for (const c of model.cases) {
   if (d.pieceCount >= 10) {
     line('占用象限', `${d.occupiedQuadrants}/4`, d.occupiedQuadrants === 4, '分布不均，检查 L1 数量')
   }
-  console.log(`  · ${d.pieceCount} 张卡 · 板面 ${d.boardSize} · 求解 ${d.layoutAttempts}`)
+  const scaleNote = c.densityScale < 1 ? ` · 卡片缩放 ×${c.densityScale}` : ''
+  console.log(`  · ${d.pieceCount} 张卡 · 板面 ${d.boardSize}${scaleNote} · 求解 ${d.layoutAttempts}`)
 
   // 红线连通性：每张非 root 卡都该挂在树上
   const linked = new Set()

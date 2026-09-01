@@ -15,8 +15,8 @@ const EDGE_MARGIN = 0.5
 const MAX_TILT = 0.085
 const GAP = 0.17            // 卡片之间留的空气
 const OVERLAP_BUDGET = 0.14 // 超过就扩板重来
-const SIZE_STEPS = [1, 1.08, 1.17, 1.27, 1.4]
-const SEEDS_PER_SIZE = 3    // 同一尺寸先换种子重排，再考虑放大板子
+const SIZE_STEPS = [1, 1.06, 1.13, 1.2, 1.28, 1.37, 1.47]
+const SEEDS_PER_SIZE = 3    // 同一尺寸先换种子重排，再考虑放大板子（密板会加倍）
 
 const area = (n) => n.size[0] * n.size[1]
 
@@ -182,6 +182,9 @@ export function solveLayout(caseModel, { seed, scale }) {
   // 都排不开才放大板子，宁可空一点也不要糊成一团。
   let best = null
   const trail = []
+  // 密板（卡片被 densityScale 缩过）拓扑更难塞紧：
+  // 同尺寸多试几个种子，比直接放大板子换来的覆盖率划算
+  const seedsPerSize = nodes.length > 30 ? 6 : SEEDS_PER_SIZE
 
   outer:
   for (const grow of SIZE_STEPS) {
@@ -191,7 +194,7 @@ export function solveLayout(caseModel, { seed, scale }) {
     innerH = innerW / ASPECT
 
     let sizeBest = null
-    for (let k = 0; k < SEEDS_PER_SIZE; k += 1) {
+    for (let k = 0; k < seedsPerSize; k += 1) {
       const run = attempt(caseModel, `${seed}#${grow.toFixed(2)}#${k}`, innerW, innerH)
       const candidate = { ...run, innerW, innerH }
       if (!sizeBest || run.metrics.maxPair < sizeBest.metrics.maxPair) sizeBest = candidate

@@ -131,13 +131,21 @@ export function buildModel(data) {
     }
 
     if (all.length < 10) warn.push(`case "${caseId}" 只有 ${all.length} 个节点，板面会明显空旷（建议 12–35 个）`)
-    if (all.length > 38) warn.push(`case "${caseId}" 有 ${all.length} 个节点，板子会被撑得很大、总览下读不清（建议拆成多个 case）`)
+    if (all.length > 60) warn.push(`case "${caseId}" 有 ${all.length} 个节点，即使缩小卡片也会挤成一团（超过 60 请拆成多个 case）`)
+
+    // 节点多时整体缩小卡片，让一块板装下更多便签，而不是把板面撑大。
+    // 面积守恒 → 缩放系数 ∝ √(基准数/节点数)；0.7 封底，再小总览下就读不成字了。
+    const densityScale = all.length > 30 ? Math.max(0.7, +Math.sqrt(30 / all.length).toFixed(3)) : 1
+    if (densityScale < 1) {
+      for (const n of all) n.size = n.size.map((v) => +(v * densityScale).toFixed(3))
+    }
 
     return {
       id: caseId,
       locale,
       label: String(raw.label ?? caseId),
       accent,
+      densityScale,
       root,
       branches,
       leaves,
