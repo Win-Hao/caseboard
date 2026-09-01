@@ -131,9 +131,15 @@ export function createCaseFile(root, { locale, cases, onSelectCase, onHome, onSe
 
   let pinnedFlip = false
   const applyFlip = (on) => {
+    // 摆动和翻面互斥：残留的 is-swinging 会在取消翻面的瞬间重启摆动动画，
+    // 把 0.55s 的翻面过渡整个顶掉，看起来像瞬间切回。
+    tag.classList.remove('is-swinging')
     tag.classList.toggle('is-flipped', on)
     flipBtn.setAttribute('aria-pressed', String(on))
   }
+  tag.querySelector('.kb-tag-card').addEventListener('animationend', () => {
+    tag.classList.remove('is-swinging')
+  })
   flipBtn.addEventListener('click', () => { pinnedFlip = !pinnedFlip; applyFlip(pinnedFlip) })
   tag.querySelector('[data-role="flip-back"]').addEventListener('click', () => { pinnedFlip = false; applyFlip(false) })
   flipBtn.addEventListener('pointerenter', () => { if (!pinnedFlip) applyFlip(true) })
